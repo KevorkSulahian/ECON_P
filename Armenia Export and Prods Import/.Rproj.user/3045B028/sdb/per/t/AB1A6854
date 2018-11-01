@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "library(dplyr)\nlibrary(writexl)\nlibrary(stringr)\nlibrary(data.table)\nfor_main = getwd()\n\nmain1  <- readxl::read_xlsx(\"Trade_Map_-_List_of_exported_products_for_the_selected_product_(All_products).xlsx\",\n                           sheet = \"Trade_Map_-_List_of_exported_pr\", col_names = TRUE) #Reading the file\ncolnames(main1)<- c('col1','col2') \nmain1 <- main1[-c(1:8),]\nmain1$col1 <- substring(main1$col1,2)\nID <- as.data.frame(cbind(main1$col1,main1$col2),stringsAsFactors = FALSE)\ncolnames(ID) <- c(\"Code\",'Product label')\n\nID$Code <- as.character(ID$Code)\n#####\nmain <- ID\nmain[1,]<-c(NA, \"TCI\")\n###\n\nsetwd(\"countries\")\nfiles=list.files(pattern=\".xlsx\")\nsetwd(for_main)\nyears <- c(\"2008\",\"2009\",\"2010\",\"2011\",\"2012\",\"2013\",\"2014\",\"2015\",\"2016\",\"2017\")\nidx <- ID\n\neeu <- c(\"Russian Federation\",\"Belarus\",\"Kazakhstan\", \"Kyrgyzstan\")\neu <- c(\"Bulgaria\", \"Germany\", \"Netherlands\", \"Belgium\",\"Italy\",\"Poland\",\n        \"United Kingdom\",\"France\",\"Romania\",\"Czech Republic\",\"Lithuania\",\n        \"Austria\",\"Finland\",\"Spain\",\"Hungary\",\"Luxembourg\",\"Sweden\",\"Denmark\",\n        \"Greece\",\"Cyprus\",\"Slovakia\",\"Croatia\",\"Slovenia\",\"Ireland\")\nArabic <- c(\"Iraq\",\"United Arab Emirates\",\"Qatar\",\"Libya, State of\",\n            \"Saudi Arabia\",\"Yemen\",\"Lebanon\",\"Kuwait\",\"Egypt\")\noptions(scipen = 999)\nfor (year in years){\n\nID <- idx\nno_data = c()\nfor (i in 1:length(files)){\n  \n  path = files[i]\n  country <-  readxl::read_xlsx(paste0(\"countries/\",path),  sheet = 1, \n                                col_names = FALSE) \n  country_name <- as.character(country[1, 'X__1'])\n  country_name <- substring(country_name,30)\n  # if (country_name == 'Armenia'){\n  #   print(i)\n  # }\n  country <- country[complete.cases(country$X__2),]\n  \n  colnames(country) <- unlist(country[country$X__1 =='Code',])\n  colnames(country) <- as.character(unlist(country[1,]))\n  country = country[-1, ]\n  country$Code <- substring(country$Code,2)\n  cols <- colnames(country)\n  name <- cols[grep(year, cols)]\n  if (length(name)!=0){\n    test <- country[,c('Code',name)]\n    \n    colnames(test) <- c('Code',country_name )\n    \n  }\n  else {\n    test <- country[,'Code']\n    test[country_name]=''\n    no_data = c(no_data,country_name)\n    \n  }\n  test$Code <- as.character(test$Code)\n  ID <- left_join(ID,test,by='Code')\n}\n\nID[is.na(ID)] <- 0\nID[,no_data] = 0\nchar_cols <-c('Code','Product label')\nID[,!(names(ID) %in% char_cols)] <- apply(ID[,!(names(ID) %in% char_cols)], 2, as.numeric)\n\nID$EEU <- rowSums(ID[, eeu])\nID$EU <- rowSums(ID[, eu])\nID$Arabic <- rowSums(ID[,Arabic])\nID_GR <- ID[,c(\"Code\",\"Product label\",\"Armenia\", \"EEU\",\"EU\",\"Arabic\")]\n\npart1 <- ID_GR\n\npart1[,!(names(part1) %in% char_cols)]<- apply(part1[,!(names(part1) %in% char_cols)], 2, function(x) x/max(x))\npart1 <- part1[-1,]\npart1 <- part1[order(part1$Code),]\n\npart2<-part1\npart2[,!(names(part2) %in% char_cols)] <- apply(part2[,!(names(part2) %in% char_cols)],2,function(x) abs(x-part1$Armenia)/2) \nTCIS <- apply(part2[,!(names(part2) %in% char_cols)],2,function(x) (1-sum(x))*100)\n\ntc <- data.frame(TCIS)\ntr_tc <- transpose(data.frame(TCIS))\ncolnames(tr_tc)<-rownames(tc)\ntr_tc['Product label'] <- \"TCI\"\ntr_tc$Code <- NA\n\ntest3 <- rbind(tr_tc, part2)\nord_col <- colnames(part1)\ntest3 <- test3[,ord_col]\ncolnames(test3) <- c(\"Code\",\"Product label\",\"Armenia\",paste0(ord_col[-c(1:3)],\".\",year))\ntest3$Armenia <- NULL\nmain <- left_join(main,test3,by=c('Code','Product label'))\n\n}\n\n# main <- main[order(main$Code),]\n# ID_GR <- ID_GR[order(ID_GR$Code),]\n# ID <- ID[order(ID$Code),]\nwrite_xlsx(main, \"TCI_Group.xlsx\")\nhead(ID[,eeu])\n",
+    "created" : 1537343183961.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2003471114",
+    "id" : "AB1A6854",
+    "lastKnownWriteTime" : 1537343110,
+    "last_content_update" : 1537343110,
+    "path" : "~/Desktop/Min Economy/TCI/groups_TCI.R",
+    "project_path" : "groups_TCI.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

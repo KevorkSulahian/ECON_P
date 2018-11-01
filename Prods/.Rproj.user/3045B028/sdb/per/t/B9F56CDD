@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "\ndf  <- readxl::read_xlsx(\"to_work.xlsx\", sheet = \"Armstat\", col_names = TRUE) #Reading the file\ncolnames(df) <- c('Name','ID','Year','Period','Export_in_tonnas',\n                  'Export','Import_in_tonnas','Import')\nchoices <- unique(df$Year)\ndf$Period <- NULL\ndf[,2:7] <- apply(df[,2:7],2,as.numeric)\ndf$Export <- df$Export/1000\ndf$Import <- df$Import/1000\n#Reading the main file\nmain  <- readxl::read_xlsx(inFile2$datapath, sheet = \"Sheet1\", col_names = FALSE) \ncolnames(main) <-  c('Name','ID')\nmain$ID<-as.numeric(main$ID)\n###\n\n#Seperating titles and assigning groups to it\ntitles <- main[is.na(main$ID),'Name']\ncounter <- 1\nfor (i in c(1:nrow(titles))){\n  titles[i,'Group'] = counter\n  counter = counter +1\n}\n\n##\nyear_agg <- function(df, Year){\n  df_Year <- df[df$Year == Year,]\n  agg_df_Year <- df_Year %>%\n    group_by(ID) %>%\n    summarise(Export_in_tonnas = sum(Export_in_tonnas),\n              Export = sum(Export),\n              Import_in_tonnas = sum(Import_in_tonnas),\n              Import = sum(Import))\n  polufinal_Year_1 <- left_join(main, agg_df_Year, by = \"ID\")\n  polufinal_Year_1['Year'] <- Year\n  counter <- 0\n  for (i in c(1:nrow(polufinal_Year_1))){\n    polufinal_Year_1[i,'Group'] = counter\n    \n    if (is.na(polufinal_Year_1[i,'ID'])){\n      counter = counter +1\n    }\n  }\n  polufinal_Year_1[is.na(polufinal_Year_1$ID),'Group']<- NA\n  polufinal_Year_1[3:6][is.na(polufinal_Year_1[3:6])] <- 0\n  \n  \n  agg_total_Year <-polufinal_Year_1 %>%\n    group_by(Group)  %>%\n    summarise(Total_Export_in_tonnas = sum(Export_in_tonnas),\n              Total_Export = sum(Export),\n              Total_Import_in_tonnas = sum(Import_in_tonnas),\n              Total_Import = sum(Import))\n  agg_total_Year <- agg_total_Year[complete.cases(agg_total_Year), ]\n  \n  \n  polufinal_Year_2 <- left_join(titles, agg_total_Year, by = \"Group\")\n  polufinal_Year_2['Group'] <- NULL\n  final_Year <- left_join(polufinal_Year_1,polufinal_Year_2, by = \"Name\")\n  \n  for (i in c(1:nrow(final_Year))){\n    if (is.na(final_Year[i,'ID'])){\n      final_Year[i,3:6] <- final_Year[i,9:12]\n    }\n  }\n  final_Year <- final_Year[,-c(8:12)]\n  \n  \n  return (final_Year)\n}\n\nyears <- as.numeric(input$year)\nfinal_year1 <- year_agg(df,years[1])\nfinal_year2 <- year_agg(df,years[2])\n\nfirst_output <- inner_join(final_year1, final_year2, by = c(\"Name\",\"ID\"),  suffix = c(paste0(\".\",years[1]), paste0(\".\",years[2])))\n\nreturn (first_output)",
+    "created" : 1534198361245.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3730542811",
+    "id" : "B9F56CDD",
+    "lastKnownWriteTime" : 1535461093,
+    "last_content_update" : 1535461093311,
+    "path" : "~/Desktop/Min Economy/Final Project/test.R",
+    "project_path" : null,
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
