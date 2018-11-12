@@ -50,5 +50,29 @@ AM_18$`2017-2018` <- round(AM_18$`2017-2018`,1)
 # check the notebook tho
 
 
+# AM_18[AM_18$Indicator == "Property rights (WEF)",]
 
 
+first_A_1 <- c("Property rights (WEF)", "Intellectual property protection") # 20 %
+# Second one is 1/2 (check what it means !!!!!!!!!!!!!!!!)
+#AM_18[AM_18$Indicator %in% first_A_1,]
+
+first_A_2 <- c("Diversion of public funds", "Public trust in politicians", "Irregular payments and bribes") # 20 
+first_A_3 <- c("Judicial independence (WEF)", "Favoritism in decisions of government officials, 1-7 (best)") # 20
+first_A_4 <- c("Wastefulness of government spending", "Burden of government regulation, 1-7 (best)",
+               "Efficiency of legal framework in challenging regs", "Efficiency of legal framework in settling disputes",
+               "Transparency of government policymaking") # 20
+first_A_5 <- c("Business costs of terrorism", "Business costs of crime and violence", "Organized crime", 
+               "Reliability of police services") # 20
+first_A <- AM_18[AM_18$Indicator %in% c(first_A_1, first_A_2, first_A_3, first_A_4, first_A_5),] # 75
+
+first_B_1 <- c("Ethical behavior of firms") # 50
+first_B_2 <- c("Strength of auditing and reporting standards", "Efficacy of corporate boards",
+               "Protection of minority shareholders interests", "Strength of investor protection") # 50
+# ask why there is a * in the end of "Strength of investor protection"
+first_B <- AM_18[AM_18$Indicator %in% c(first_B_1, first_B_2),] # 25
+first_A$`2017-2018`[first_A$Indicator == "Wastefulness of government spending"] <- 3.3 # this should me manually computed
+A <- mean(first_A$`2017-2018`, na.rm = T)
+B <- mean(first_B$`2017-2018`, na.rm = T)
+
+first <- ((A * .75) + (B * .25)) # 

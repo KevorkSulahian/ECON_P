@@ -6,6 +6,8 @@ library(ggthemes)
 
 # data is our main data
 # data1 is the data we need 
+library(RColorBrewer)
+
 data <- readxl::read_xls("pruductivity countries 2017().xls", sheet = 2)
 data1 <- readxl::read_xls("pruductivity countries 2017().xls", sheet = 3)
 
@@ -18,15 +20,19 @@ options(scipen = 999)
 # Too big
 data <- data[data$Productivity <  90,]
 colnames(data) <- c("Country","GDP", "Productivity")
+
 # merg them
 df <- merge(data, data1, by = "Country")
 # divide by million (easier to see)
+df <- merge(data, data1, by = "Country")
 df$GDP <- df$GDP/1000000
 df <- df[c(1:4)]
 colnames(df) <- c("Country","GDP", "Productivity", "Abb")
 # Armenia different point (different color)
 AM <- df[df$Country == "Armenia",]
+
 # delete remaining extra cases
+
 df <- df[complete.cases(df),]
 
 
@@ -37,6 +43,7 @@ ggplot(df, aes(x = GDP, y = Productivity)) + geom_point(color = "black", aes(siz
   geom_point(data = AM, color = "red", size = 2.5) +
   xlim(c(0,3740232.44)) + ylim(c(0,90)) + coord_flip() + theme(legend.position="none") +
   labs(y = "ՀՆԱ (մլն ԱՄՆ դոլար)", x = "Արտադրողականություն (ԱՄՆ դոլար)")
+
 
 # not to be used
 ggplot(df, aes(y = Productivity, x = reorder(Abb, -Productivity))) + geom_bar(stat = 'identity') +
