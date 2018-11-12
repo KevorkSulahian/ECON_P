@@ -50,6 +50,20 @@ AM_18$`2017-2018` <- round(AM_18$`2017-2018`,1)
 # check the notebook tho
 
 
+# A FUNCTION
+count_stars_pos <- function(data, indicator) {
+  max <- max(data_18$`2017-2018`[data_18$Indicator == indicator], na.rm = T)
+  min <- min(data_18$`2017-2018`[data_18$Indicator == indicator], na.rm = T)
+  return (6 * ((data - min) / (max - min))  + 1)
+}
+count_stars_neg <- function(data, indicator) {
+  max <- max(data_18$`2017-2018`[data_18$Indicator == indicator], na.rm = T)
+  min <- min(data_18$`2017-2018`[data_18$Indicator == indicator], na.rm = T)
+  return (-6 * ((data - min) / (max - min))  + 7)
+}
+
+
+
 # AM_18[AM_18$Indicator == "Property rights (WEF)",]
 
 
@@ -69,10 +83,41 @@ first_A <- AM_18[AM_18$Indicator %in% c(first_A_1, first_A_2, first_A_3, first_A
 first_B_1 <- c("Ethical behavior of firms") # 50
 first_B_2 <- c("Strength of auditing and reporting standards", "Efficacy of corporate boards",
                "Protection of minority shareholders interests", "Strength of investor protection") # 50
-# ask why there is a * in the end of "Strength of investor protection"
 first_B <- AM_18[AM_18$Indicator %in% c(first_B_1, first_B_2),] # 25
-first_A$`2017-2018`[first_A$Indicator == "Wastefulness of government spending"] <- 3.3 # this should me manually computed
+# strength investor has *
+
+Indicator <- "Strength of investor protection"
+strength_investor_AM <- count_stars_pos(first_B$`2017-2018`[first_B$Indicator == Indicator], Indicator)
+
+
+first_B$`2017-2018`[first_B$Indicator == "Strength of investor protection"] <- strength_investor_AM
+
+first_A$`2017-2018`[first_A$Indicator == "Wastefulness of government spending"] <- 3.3 ############### this should me manually computed
 A <- mean(first_A$`2017-2018`, na.rm = T)
 B <- mean(first_B$`2017-2018`, na.rm = T)
 
-first <- ((A * .75) + (B * .25)) # 
+first <- ((A * .75) + (B * .25)) # 4.11
+
+# second pillar
+
+second_A <- c("Quality of overall infrastructure", "Quality of roads", "Quality of railroad infrastructure",
+              "Quality of port infrastructure", "Quality of air transport infrastructure", "Available airline seat")
+second_A <- AM_18[AM_18$Indicator %in% second_A,]
+
+Indicator <- c("Available airline seat")
+AAS <- count_stars_pos(second_A$`2017-2018`[second_A$Indicator == Indicator], Indicator)
+second_A$`2017-2018`[second_A$Indicator == Indicator] <- AAS
+
+
+second_B <- c("Quality of electricity supply", "Mobile telephone subscriptions", "Fixed telephone lines")
+# again what should i do with the last 2?
+second_B <- AM_18[AM_18$Indicator %in% second_B,]
+Indicator <- "Mobile telephone subscriptions"
+MTS <- count_stars_pos(second_B$`2017-2018`[second_B$Indicator == Indicator], Indicator)
+second_B$`2017-2018`[second_B$Indicator == Indicator] <- MTS
+Indicator <- "Fixed telephone lines"
+FTS <- count_stars_pos(second_B$`2017-2018`[second_B$Indicator == Indicator], Indicator)
+second_B$`2017-2018`[second_B$Indicator == Indicator] <- FTS
+
+second <- mean(c(mean(second_A$`2017-2018`), mean(second_B$`2017-2018`)))
+# 1/2 are all wrong kido and check the notes

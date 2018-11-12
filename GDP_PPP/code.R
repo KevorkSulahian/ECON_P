@@ -42,7 +42,8 @@ ggplot(df, aes(x = GDP, y = Productivity)) + geom_point(color = "black", aes(siz
   theme_economist_white() +
   geom_point(data = AM, color = "red", size = 2.5) +
   xlim(c(0,3740232.44)) + ylim(c(0,90)) + coord_flip() + theme(legend.position="none") +
-  labs(y = "ՀՆԱ (մլն ԱՄՆ դոլար)", x = "Արտադրողականություն (ԱՄՆ դոլար)")
+  labs(y = "ՀՆԱ (մլն ԱՄՆ դոլար)", x = "Արտադրողականություն (ԱՄՆ դոլար)") + 
+  geom_line()
 
 
 # not to be used
