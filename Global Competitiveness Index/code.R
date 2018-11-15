@@ -1,3 +1,5 @@
+library(dplyr)
+
 data <- read.csv("data.csv")
 
 # Step 1 - fixing and understanding the data
@@ -29,23 +31,6 @@ armenia <- armenia[!(armenia$Type %in% "Rank"),]
 AM_18 <- armenia[,c("ID", "Country", "Indicator", "2017-2018")]
 AM_18$`2017-2018` <- round(AM_18$`2017-2018`,1)
 
-
-## Check if all countries have 122 obs.
-# 
-# US <- data[data$Country =="United States",]
-# US <- US[!(US$Type %in% "Rank"),]
-# 
-# US_18 <- US[,c("ID", "Country", "Indicator", "2017-2018")]
-# US_18$`2017-2018` <- round(US_18$`2017-2018`,1)
-
-### US does
-# 
-# data_18 <- data[,c("ID", "Country", "Indicator", "Type", "2017-2018")]
-# data_18 <- data_18[!(data_18$Type %in% "Rank"),]
-# unique(data_18$Indicator)
-
-### they all do 
-
 ## Now we need to understand which are available and which are not
 # check the notebook tho
 
@@ -62,7 +47,17 @@ count_stars_neg <- function(data, indicator) {
   return (-6 * ((data - min) / (max - min))  + 7)
 }
 
+half_function <- function(data) {
+  complete <- filter(data, half == F) # ones who don'ts
+  non_complete <-  filter(data, half == T) # ones who have half
+  return(as.numeric((sum(complete$`2017-2018`) + 0.5*sum(non_complete$`2017-2018`)) / 
+           (count(complete) + 0.5* count(non_complete))))
+}
 
+
+### put halfs in a var
+# starting only with second b for the sake of testing
+halfs <- c("Mobile telephone subscriptions", "Fixed telephone lines")
 
 # AM_18[AM_18$Indicator == "Property rights (WEF)",]
 
@@ -119,5 +114,8 @@ Indicator <- "Fixed telephone lines"
 FTS <- count_stars_pos(second_B$`2017-2018`[second_B$Indicator == Indicator], Indicator)
 second_B$`2017-2018`[second_B$Indicator == Indicator] <- FTS
 
-second <- mean(c(mean(second_A$`2017-2018`), mean(second_B$`2017-2018`)))
-# 1/2 are all wrong kido and check the notes
+second_B$half <- ifelse(second_B$Indicator %in% halfs, T, F)
+second_B_half <- half_function(second_B)
+
+second <- mean(c(mean(second_A$`2017-2018`), second_B_half))
+
