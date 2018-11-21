@@ -58,3 +58,4 @@ scatter + theme_bw() + scale_color_manual(values=c('#999999','#ce8108','#00c7c7'
         legend.title = element_text(size = 12),
         legend.direction = "horizontal", legend.position = "bottom", legend.box = "vertical") +
   guides(colour = guide_legend(override.aes = list(size=5)))
+
