@@ -529,5 +529,4 @@ for (i in 1:ncol(combination)) {
 sigma <- data.frame(sigma = sigma, comb_nr =  1:ncol(combination))
 
 
-
 c(summary(lm(Mat[,combination[1,1]] ~ Mat[,combination[2,1]]))$sigma, summary(lm(Mat[,combination[1,2]] ~ Mat[,combination[2,2]]))$sigma)
