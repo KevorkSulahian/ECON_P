@@ -43,3 +43,32 @@ ss <- function(b) {
   return(temp2)
 }
 plot(ss,xlim=range(0,0.7))
+
+
+
+
+
+
+
+# something else
+
+x<- seq(-1,1, by = 0.001)
+
+x_function <- function(x) x*2
+fvalues<- x_function(x)
+
+g <- function(g,z) g*2 + 1 - z
+
+z <- 0
+
+for(i in 1:length(fvalues)) {
+  z[i] = uniroot(g, z = fvalues[i], lower = -3, upper= 3)
+}
+z2 <- unlist(z)
+
+d <- data.frame(x = 2, y = 1:length(x))
+d$x <- x
+d$y <- z2
+library(ggplot2)
+
+ggplot(d, aes(x, y)) + geom_point()

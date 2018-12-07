@@ -2,6 +2,7 @@ library(dplyr)
 library(rpgm)
 library(shiny)
 library(shinydashboard)
+library(fmsb)
 
 data<- readxl::read_xlsx("data_main.xlsx", sheet = 2)
 
@@ -114,6 +115,39 @@ if((data18AM[inflation, country_pos_this] > 0.5) & (data18AM[inflation, country_
   print(star_pos(inflation, country_pos_all))
 }
 
+pillars_all<- data18[grep('pillar', data18$Series),]
+pillars_all <- pillars_all[,-c(1:5)]
+pillars_all <- as.matrix(pillars_all)
+corr <- cor(pillars_all)
+res <- which(lower.tri(corr) >.3, arr.ind = T)
+res2 <- res[res[,1] != res[,2],]
+similars <- data.frame(res2, correlation = corr[res2])
+similars <- similars[complete.cases(similars),]
+similars <- similars[similars$row %in% 5 | similars$col %in% 5,]
+
+corr[27,]
+
+
+group <- read.csv("data.csv")
+group <- group[c(1,2)]
+group<-group[-1,]
+colnames(group) = c("Country", "GDP")
+group$group <- 0
+group <- group[complete.cases(group),]
+for (i in 1:length(group$GDP)) {
+  if (group$GDP[i] < 2000) {
+    group$group[i] <- 1
+  } else if(group$GDP[i] < 3000) {
+    group$group[i] <- 2
+  } else if (group$GDP[i]< 9000) {
+    group$group[i] <- 3
+  } else{
+    group$group[i]<- 4
+  }
+}
+
+  ## BIG BOI FUNCTIONS
+
 # A <- data18AM %>%
 #   filter(grepl("^A", data18AM$`Code GCR`))
 # 
@@ -189,13 +223,16 @@ get_table <- function(id) {
   colnames(temp) <- c("V1", "V2")
   # temp$V1 <- as.numeric(temp$V1)
   temp <- as.data.frame(temp[complete.cases(temp),])
+  
   temp$V2 <- rownames(temp)
   colnames(temp) <- c("V1", "Country")
   temp <- temp[temp$Country %in% rownames(data18_rank_cont),]
   temp$Rank <- data18_rank_cont[temp$Country %in% rownames(data18_rank_cont),]
   temp <- arrange(temp, desc(V1))
-  colnames(temp) <- c(data18$`Series unindented`[data18$`Code GCR` %in% id], "Country", "Rank")
-  return(temp[,c(2,1,3)])
+  colnames(temp) <- c(data18$`Series unindented`[data18$`Code GCR` %in% id], "Country", "GCI Rank")
+  temp$`Pillar Rank`<- rownames(temp)
+  temp$`GCI Rank` <- as.character(temp$`GCI Rank`)
+  return(temp[,c(2,1,4,3)])
 }
 id = "A.01"
 aa <- get_table("A.01")
@@ -206,86 +243,111 @@ get_diff <- function(number) {
   return(which(rownames(data18_rank) == "Armenia"))
 }
 
+rank <- 73
+
 get_diff(4.5)
 
 runApp(
   list(
     ui = dashboardPage(
       dashboardHeader(),
-      dashboardSidebar(),
+      dashboardSidebar(collapsed = T),
       dashboardBody(
         tags$head(
           tags$style(HTML(
-            'h3 {height: 49px;}'
+            'h3 {height: 49px;}
+            .btn {margin: 5px 10px;}
+            .col-sm-4 {text-align: center;
+                      text-align: -webkit-center;}
+            .col-sm-2 {text-align: center;
+                      text-align: -webkit-center;}
+            .col-sm-6 {text-align: center;
+                      text-align: -webkit-center;}
+            #radar {min-height: 1000px;}
+            #radar > img {width : 100%;
+                   height : 100%;}
+            '
           ))
         ),
-           fluidRow(
-             tabBox(id = "first", width = 12,
-                    tabPanel("tab1",
-                  
-                    fluidRow(
-                      column(5, offset = 1,
-                       fluidRow(selectInput("A.01", "Institutions", choices = colnames(data18_countries), selected = "Armenia")),
-                       fluidRow(selectInput("A.02", "Infrastructure", choices = colnames(data18_countries), selected = "Armenia")),
-                       fluidRow(selectInput("A.03", "Macroeconomic environment", choices = colnames(data18_countries), selected = "Armenia")),
-                       fluidRow(selectInput("A.04", "Health and primary education", choices = colnames(data18_countries), selected = "Armenia")),
-                       fluidRow(selectInput("B.05", "Higher education and training", choices = colnames(data18_countries), selected = "Armenia")),
-                       fluidRow(selectInput("B.06", "Goods market efficiency", choices = colnames(data18_countries), selected = "Armenia")),
-                       fluidRow(selectInput("B.07", "Labor market efficiency", choices = colnames(data18_countries), selected = "Armenia")),
-                       fluidRow(selectInput("B.08", "Financial market development", choices = colnames(data18_countries), selected = "Armenia")),
-                       fluidRow(selectInput("B.09", "Technological readiness", choices = colnames(data18_countries), selected = "Armenia")),
-                       fluidRow(selectInput("B.10", "Market size", choices = colnames(data18_countries), selected = "Armenia")),
-                       fluidRow(selectInput("C.11", "Business sophistication", choices = colnames(data18_countries), selected = "Armenia")),
-                       fluidRow(selectInput("C.12", "Innovation", choices = colnames(data18_countries), selected = "Armenia"))),
-                      
-                      column(3,offset = 1,
-                             fluidRow(h3(textOutput("A.01_out"))), 
-                             fluidRow(h3(textOutput("A.02_out"))),
-                             fluidRow(h3(textOutput("A.03_out"))),
-                             fluidRow(h3(textOutput("A.04_out"))),
-                             fluidRow(h3(textOutput("B.05_out"))),
-                             fluidRow(h3(textOutput("B.06_out"))),
-                             fluidRow(h3(textOutput("B.07_out"))),
-                             fluidRow(h3(textOutput("B.08_out"))),
-                             fluidRow(h3(textOutput("B.09_out"))),
-                             fluidRow(h3(textOutput("B.10_out"))),
-                             fluidRow(h3(textOutput("C.11_out"))),
-                             fluidRow(h3(textOutput("C.12_out")))
-                            )
-                    ),
-                    
-                    fluidRow(
-                      column(4, actionButton(inputId = "calculate_gci", label = "calculate GCI"), offset = 4)
-                    ),
-                    
-                    fluidRow(
-                      div(
-                      column(3, 
-                            div(h3("GCI"), h3(textOutput("GCI")), offset = 2)),
-                      column(3, 
-                            div(h3("difference"), h3(textOutput("GCI_diff")), offset = 1)),
-                      column(3,
-                             div(h3("new rank"), h3(textOutput("GCI_rank")), offset = 1))), align = "center")
-                    ),
-                    
-                    tabPanel("tab2",
-                             actionButton("showTable1",label = "1st pillar"),
-                             actionButton("showTable2",label = "2nd pillar"),
-                             actionButton("showTable3",label = "3rd pillar"),
-                             actionButton("showTable4",label = "4th pillar"),
-                             actionButton("showTable5",label = "5th pillar"),
-                             actionButton("showTable6",label = "6th pillar"),
-                             actionButton("showTable7",label = "7th pillar"),
-                             actionButton("showTable8",label = "8th pillar"),
-                             actionButton("showTable9",label = "9th pillar"),
-                             actionButton("showTable10",label = "10th pillar"),
-                             actionButton("showTable11",label = "11th pillar"),
-                             actionButton("showTable12",label = "12th pillar"),
-                             tableOutput(outputId = "table1")
-                             ))
-           
-             )        
-        )
+        fluidRow(
+          tabBox(id = "first", width = 12,
+                 tabPanel("GCI",
+                          
+                          fluidRow(
+                            column(4,
+                                   fluidRow(selectInput("A.01", "Institutions", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("A.02", "Infrastructure", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("A.03", "Macroeconomic environment", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("A.04", "Health and primary education", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("B.05", "Higher education and training", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("B.06", "Goods market efficiency", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("B.07", "Labor market efficiency", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("B.08", "Financial market development", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("B.09", "Technological readiness", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("B.10", "Market size", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("C.11", "Business sophistication", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("C.12", "Innovation", choices = colnames(data18_countries), selected = "Armenia"))),
+                            
+                            column(2,
+                                   fluidRow(h3(textOutput("A.01_out"))), 
+                                   fluidRow(h3(textOutput("A.02_out"))),
+                                   fluidRow(h3(textOutput("A.03_out"))),
+                                   fluidRow(h3(textOutput("A.04_out"))),
+                                   fluidRow(h3(textOutput("B.05_out"))),
+                                   fluidRow(h3(textOutput("B.06_out"))),
+                                   fluidRow(h3(textOutput("B.07_out"))),
+                                   fluidRow(h3(textOutput("B.08_out"))),
+                                   fluidRow(h3(textOutput("B.09_out"))),
+                                   fluidRow(h3(textOutput("B.10_out"))),
+                                   fluidRow(h3(textOutput("C.11_out"))),
+                                   fluidRow(h3(textOutput("C.12_out")))
+                            ),
+                            
+                            column(6#,
+                                   # plotOutput("radar"))
+                            
+                          ),
+                          
+                          fluidRow(
+                            column(4, actionButton(inputId = "calculate_gci", label = "calculate GCI"), offset = 4)
+                          ),
+                          
+                          fluidRow(
+                            div(
+                              column(3, 
+                                     div(h3("GCI"), h3(textOutput("GCI")))),
+                              column(3, 
+                                     div(h3("Difference"), h3(textOutput("GCI_diff")))),
+                              column(3,
+                                     div(h3("New rank"), h3(textOutput("GCI_rank")))),
+                               column(3,
+                                     div(h3("Rank difference"), h3(textOutput("rank_diff"))))
+                              , align = "center")
+                          ),
+                          
+                          fluidRow(
+                            plotOutput("radar"))
+                          )
+                 ),
+                 
+                 tabPanel("DATA",
+                          actionButton("showTable1",label = "Institutions"),
+                          actionButton("showTable2",label = "Infrastructure"),
+                          actionButton("showTable3",label = "Macroeconomic environment"),
+                          actionButton("showTable4",label = "Health and primary education"),
+                          actionButton("showTable5",label = "Higher education and training"),
+                          actionButton("showTable6",label = "Goods market efficiency"),
+                          actionButton("showTable7",label = "Labor market efficiency"),
+                          actionButton("showTable8",label = "Financial market development"),
+                          actionButton("showTable9",label = "Technological readiness"),
+                          actionButton("showTable10",label = "Market size"),
+                          actionButton("showTable11",label = "Business sophistication"),
+                          actionButton("showTable12",label = "Innovation"),
+                          tableOutput(outputId = "table1")
+                 ))
+          
+        )        
+      )
     ),
     server = shinyServer(function(input,output,session) {
       
@@ -346,9 +408,9 @@ runApp(
         output$C.12_out <- renderText(get_number("C.12", input$C.12))
         pill$temp12 <- (get_number("C.12", input$C.12))
       })
-
- 
-
+      
+      
+      
       observeEvent(input$showTable1, {
         temp <- get_table("A.01")
         
@@ -404,8 +466,9 @@ runApp(
         temp <- get_table("C.12")
         output$table1 <- renderTable(temp)
       })
+      
       observeEvent(input$calculate_gci, {
-
+        
         tempA <- test_A(isolate(pill[["temp1"]]),isolate(pill[["temp2"]]),isolate(pill[["temp3"]]),isolate(pill[["temp4"]]))
         tempB <- test_B(isolate(pill[["temp5"]]),isolate(pill[["temp6"]]),isolate(pill[["temp7"]]),isolate(pill[["temp8"]]),
                         isolate(pill[["temp9"]]),isolate(pill[["temp10"]]))
@@ -417,8 +480,54 @@ runApp(
         
         output$GCI_rank <- renderText(get_diff(GCI(tempA, tempB, tempC)))
         
+        output$rank_diff <- renderText(rank -get_diff(GCI(tempA, tempB, tempC)))
+        
+        
+        
+        # plot radar
+        
+        radar_p=as.data.frame(matrix( sample( 2:20 , 12 , replace=T) , ncol=12))
+        colnames(radar_p)= col_names
+        
+        # To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each topic to show on the plot!
+        radar_p=rbind(rep(7,12) , rep(0,12) , radar_p)
+        
+        radar_p[4,] <- as.numeric(radar$Armenia)
+        
+        radar_p[3,] <-  c(isolate(pill[["temp1"]]),isolate(pill[["temp2"]]),isolate(pill[["temp3"]]),isolate(pill[["temp4"]]),
+                          isolate(pill[["temp5"]]),isolate(pill[["temp6"]]),isolate(pill[["temp7"]]),isolate(pill[["temp8"]]),
+                          isolate(pill[["temp9"]]),isolate(pill[["temp10"]]),isolate(pill[["temp11"]]),isolate(pill[["temp12"]]))
+        # The default radar chart proposed by the library:
+        
+        color_borders = c( rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9))
+        colors_in = c( rgb(0.2,0.5,0.5,0.4), rgb(0.8,0.2,0.5,0.4))
+        output$radar <-renderPlot({radarchart(radar_p, axistype = 1,
+                                              #custom polygon
+                                              pcol = color_borders, pfcol = colors_in, plwd = 4, plty = 1,
+                                              #custom grid
+                                              cglcol = "grey", cglty = 1, axislabcol = "grey", caxislabels = seq(0,9,1), cglwd = 1,
+                                              #custom labels
+                                              vlcex = 1.5)
+          legend(x = 0.8, y = 1.3, legend = c("New", "Old"), bty = "n", pch = 20, col = color_borders,
+                 text.col = "black", cex = 1.5, pt.cex = 2)
+        })
+        
       })
     })
   )
 )
-  
+
+
+# try this thing on bitch
+set.seed(1)
+Mat <- matrix(rnorm(300), ncol = 10)
+combination <- combn(1:ncol(Mat), m = 2)
+sigma <- NULL
+for (i in 1:ncol(combination)) {
+  sigma <- c(sigma, summary(lm(Mat[,combination[1,i]] ~ Mat[,combination[2,i]]))$sigma)
+}
+sigma <- data.frame(sigma = sigma, comb_nr =  1:ncol(combination))
+
+
+
+c(summary(lm(Mat[,combination[1,1]] ~ Mat[,combination[2,1]]))$sigma, summary(lm(Mat[,combination[1,2]] ~ Mat[,combination[2,2]]))$sigma)
