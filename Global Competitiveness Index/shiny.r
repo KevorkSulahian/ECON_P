@@ -118,7 +118,9 @@ if((data18AM[inflation, country_pos_this] > 0.5) & (data18AM[inflation, country_
 pillars_all<- data18[grep('pillar', data18$Series),]
 pillars_all <- pillars_all[,-c(1:5)]
 pillars_all <- as.matrix(pillars_all)
-corr <- cor(pillars_all)
+
+# using pillars_all2 rn
+corr <- cor(pillars_all2)
 res <- which(lower.tri(corr) >.3, arr.ind = T)
 res2 <- res[res[,1] != res[,2],]
 similars <- data.frame(res2, correlation = corr[res2])
@@ -128,12 +130,16 @@ similars <- similars[similars$row %in% 5 | similars$col %in% 5,]
 corr[27,]
 
 
+
 group <- read.csv("data.csv")
 group <- group[c(1,2)]
 group<-group[-1,]
 colnames(group) = c("Country", "GDP")
 group$group <- 0
 group <- group[complete.cases(group),]
+group <- group[order(group$GDP, decreasing = T),]
+rownames(group) <- NULL
+group$GDP_Rank <- rownames(group)
 for (i in 1:length(group$GDP)) {
   if (group$GDP[i] < 2000) {
     group$group[i] <- 1
@@ -146,7 +152,11 @@ for (i in 1:length(group$GDP)) {
   }
 }
 
-  ## BIG BOI FUNCTIONS
+group$Country <- as.character(group$Country)
+group$Country[group$Country == "Iran"] <- "Iran, Islamic Rep."
+group2 <- group
+group <- group[group$group %in% group$group[group$Country %in% "Armenia"],]
+## BIG BOI FUNCTIONS
 
 # A <- data18AM %>%
 #   filter(grepl("^A", data18AM$`Code GCR`))
@@ -234,8 +244,25 @@ get_table <- function(id) {
   temp$`GCI Rank` <- as.character(temp$`GCI Rank`)
   return(temp[,c(2,1,4,3)])
 }
-id = "A.01"
-aa <- get_table("A.01")
+# id = "GCI"
+# aa <- get_table("")
+get_table_GCI <- function() {
+  temp <- data.frame(t(data18_countries[data18$`Code GCR` %in% "GCI",]), ordered = T)
+  colnames(temp) <- c("V1", "V2")
+  # temp$V1 <- as.numeric(temp$V1)
+  temp <- as.data.frame(temp[complete.cases(temp),])
+  
+  temp$V2 <- rownames(temp)
+  colnames(temp) <- c("V1", "Country")
+  temp <- temp[temp$Country %in% rownames(data18_rank_cont),]
+  temp$Rank <- data18_rank_cont[temp$Country %in% rownames(data18_rank_cont),]
+  temp <- arrange(temp, desc(V1))
+  colnames(temp) <- c("GCI", "Country", "Pillar_ Rank")
+  temp$Pillar_Rank <- as.character(temp$Rank)
+  temp2<- merge(temp, group2, by ="Country", all.x = T)
+  return(temp2[,c(2,1,3,4,6)])
+}
+
 
 get_diff <- function(number) {
   data18_rank[which(rownames(data18_rank) == "Armenia"),] <- number
@@ -246,6 +273,140 @@ get_diff <- function(number) {
 rank <- 73
 
 get_diff(4.5)
+
+
+## for part 2 now
+
+
+set.seed(1)
+# Mat <- matrix(rnorm(300), ncol = 10)
+# combination <- combn(1:ncol(Mat), m = 2)
+# combination <- as.data.frame(combination)
+# combination <- combination[combination[1,] %in% 2 | combination[2,] %in% 2] #where 2 is armenia
+# sigma <- NULL
+# for (i in 1:ncol(combination)) {
+#   sigma <- c(sigma, summary(lm(Mat[,combination[1,i]] ~ Mat[,combination[2,i]]))$sigma)
+# }
+# 
+# sigma <- as.data.frame(sigma)
+# 
+# c(summary(lm(Mat[,combination[1,1]] ~ Mat[,combination[2,1]]))$sigma,
+#   summary(lm(Mat[,combination[1,2]] ~ Mat[,combination[2,2]]))$sigma)
+# 
+
+pillars_all2 <- pillars_all[,complete.cases(t(pillars_all))]
+pillars_all2 <- as.data.frame(pillars_all2)
+
+country.names <- as.character(group$Country)
+# pillars_all3 <- pillars_all2[country.names]
+
+
+pillars_all3 <- pillars_all2 %>%
+  select(c(country.names))
+
+combination2 <- combn(1:ncol(pillars_all3), m = 2)
+combination2 <- as.data.frame(combination2)
+combination2 <- combination2[combination2[1,] %in% 28 | combination2[2,] %in% 28] #where 3 is armenia
+colnames(combination2) <- c(1:ncol(combination2))
+sigma2 <- NULL
+for (i in 1:ncol(combination2)) {
+  sigma2 <- c(sigma2, summary(lm(pillars_all3[,combination2[1,i]] ~ pillars_all3[,combination2[2,i]]))$sigma)
+}
+
+sigma2 <- as.data.frame(sigma2)
+sigma2$location <- rownames(sigma2)
+sigma2 <- sigma2[order(sigma2),]
+sigma2 <- sigma2[complete.cases(sigma2),]
+top_3 <- head(sigma2, n= 15)
+top_3_comb <- combination2[top_3$location]
+
+lenght_row = length(c(top_3_comb[top_3_comb[1,]%in% 28]))
+length_column =  length(c(top_3_comb[top_3_comb[2,]%in% 28])) 
+top_3_countries_index<- NULL
+
+# row
+for(i in 1:lenght_row) {
+  top_3_countries_index <- c(top_3_countries_index, top_3_comb[top_3_comb[1,]%in% 28][[i]][2])
+}
+# col
+for(i in 1:length_column) {
+  top_3_countries_index <- c(top_3_countries_index, top_3_comb[top_3_comb[2,]%in% 28][[i]][1])
+}
+# this way it's ordered
+top_3_countries <- pillars_all3[c(21,17,22,19,12,4,29,23,15,13,30,26,18,1,20)]
+
+
+# radar <- data18AM[grep('pillar', data18AM$Series),]
+# radar$Series <- substr(x = radar$Series, start = 13, stop = 100)
+# radar_p=as.data.frame(matrix( sample( 2:20 , 12 , replace=T) , ncol=12))
+# colnames(radar_p)= radar$Series
+
+
+# To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each topic to show on the plot!
+# radar_p=rbind(rep(7,12) , rep(0,12) , radar_p)
+# get_length = length(row.names(radar_p))
+# for (i in 1:length(top_3_countries_index)) {
+#   radar_p[get_length + i -1,] <- top_3_countries[i]
+# }
+
+# color_borders = c( rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9), rgb(0.7,0.5,0.1,0.9))
+# colors_in = c( rgb(0.2,0.5,0.5,0.4), rgb(0.8,0.2,0.5,0.4), rgb(0.7,0.5,0.1,0.4))
+# radarchart(radar_p, axistype = 1,
+#            #custom polygon
+#            pcol = color_borders, pfcol = colors_in, plwd = 4, plty = 1,
+#            #custom grid
+#            cglcol = "grey", cglty = 1, axislabcol = "grey", caxislabels = seq(0,9,1), cglwd = 1,
+#            #custom labels
+#            vlcex = 1.5)
+# legend(x = 0.8, y = 1.3, legend = c("Number 1", "Number 2", "Number 3"), bty = "n", pch = 20, col = color_borders,
+#        text.col = "black", cex = 1.5, pt.cex = 2)  
+
+
+
+# trying new shit
+# 
+# library(ggplot2)
+# library(reshape2)
+# library(dplyr)
+# ###generate some data
+# popdata <- data.frame(x=1950:1960,fempop=sample(2:7,11,T),malepop=sample(2:7,11,T))
+# 
+# #turn to long format for plotting
+# DateTime = as.POSIXct('1/27/2017 6:49', format='%m/%d/%Y %H:%M') + 1:10*60
+# AMK = c(17,17,15,17,17,17,17,16,16,19)
+# SK = c(3,2,1,1,2,1,1,4,3,3)
+# JR = c(11,13,14,13,13,10,13,14,10,11)
+# 
+# df = data.frame(DateTime, AMK, SK, JR)
+# 
+# library(ggplot2)
+# library(dplyr)
+# library(tidyr)
+# top_3_countries2 <- top_3_countries
+# top_3_countries2$Pillar <- rownames(top_3_countries)
+# dfplot <- df %>% gather(key, value, -DateTime)
+# dfplot2 <- top_3_countries2 %>% gather(key, value, -Pillar)  
+# dfplot2$Pillar <- as.numeric(dfplot2$Pillar)
+# dfplot2 <- dfplot2[order(dfplot2$Pillar),]
+# ggplot(dfplot2, mapping = aes(x = Pillar , y = value, color = key) ) + geom_point(stat = "identity") +
+#   scale_x_continuous(breaks = dfplot2$Pillar)
+# 
+# 
+# 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 runApp(
   list(
@@ -258,17 +419,22 @@ runApp(
             'h3 {height: 49px;}
             .btn {margin: 5px 10px;}
             .col-sm-4 {text-align: center;
-                      text-align: -webkit-center;}
+            text-align: -webkit-center;}
             .col-sm-2 {text-align: center;
-                      text-align: -webkit-center;}
+            text-align: -webkit-center;}
             .col-sm-6 {text-align: center;
-                      text-align: -webkit-center;}
+            text-align: -webkit-center;}
+            .col-sm-12 {text-align: center;
+            text-align: -webkit-center;}
             #radar {min-height: 1000px;}
             #radar > img {width : 100%;
-                   height : 100%;}
+            height : 100%;}
+            #table1{ font-size:16px; margin: 10px }
+            #table2{ font-size:16px; margin: 10px }
+
             '
           ))
-        ),
+          ),
         fluidRow(
           tabBox(id = "first", width = 12,
                  tabPanel("GCI",
@@ -280,7 +446,18 @@ runApp(
                                    fluidRow(selectInput("A.03", "Macroeconomic environment", choices = colnames(data18_countries), selected = "Armenia")),
                                    fluidRow(selectInput("A.04", "Health and primary education", choices = colnames(data18_countries), selected = "Armenia")),
                                    fluidRow(selectInput("B.05", "Higher education and training", choices = colnames(data18_countries), selected = "Armenia")),
-                                   fluidRow(selectInput("B.06", "Goods market efficiency", choices = colnames(data18_countries), selected = "Armenia")),
+                                   fluidRow(selectInput("B.06", "Goods market efficiency", choices = colnames(data18_countries), selected = "Armenia"))),
+                            
+                            column(2,
+                                   fluidRow(h3(textOutput("A.01_out"))), 
+                                   fluidRow(h3(textOutput("A.02_out"))),
+                                   fluidRow(h3(textOutput("A.03_out"))),
+                                   fluidRow(h3(textOutput("A.04_out"))),
+                                   fluidRow(h3(textOutput("B.05_out"))),
+                                   fluidRow(h3(textOutput("B.06_out")))
+                            ),
+                            
+                            column(4,
                                    fluidRow(selectInput("B.07", "Labor market efficiency", choices = colnames(data18_countries), selected = "Armenia")),
                                    fluidRow(selectInput("B.08", "Financial market development", choices = colnames(data18_countries), selected = "Armenia")),
                                    fluidRow(selectInput("B.09", "Technological readiness", choices = colnames(data18_countries), selected = "Armenia")),
@@ -289,22 +466,22 @@ runApp(
                                    fluidRow(selectInput("C.12", "Innovation", choices = colnames(data18_countries), selected = "Armenia"))),
                             
                             column(2,
-                                   fluidRow(h3(textOutput("A.01_out"))), 
-                                   fluidRow(h3(textOutput("A.02_out"))),
-                                   fluidRow(h3(textOutput("A.03_out"))),
-                                   fluidRow(h3(textOutput("A.04_out"))),
-                                   fluidRow(h3(textOutput("B.05_out"))),
-                                   fluidRow(h3(textOutput("B.06_out"))),
                                    fluidRow(h3(textOutput("B.07_out"))),
                                    fluidRow(h3(textOutput("B.08_out"))),
                                    fluidRow(h3(textOutput("B.09_out"))),
                                    fluidRow(h3(textOutput("B.10_out"))),
                                    fluidRow(h3(textOutput("C.11_out"))),
-                                   fluidRow(h3(textOutput("C.12_out")))
-                            ),
+                                   fluidRow(h3(textOutput("C.12_out")))   
+                            )),
+                          
+                          fluidRow(
+                            div(style = "text-align: center",h2("Closest countries by pillars"))
                             
-                            column(6#,
-                                   # plotOutput("radar"))
+                          ),
+                          
+                          fluidRow(
+                            column(12,
+                                   tableOutput(outputId = "table2"))
                             
                           ),
                           
@@ -320,13 +497,13 @@ runApp(
                                      div(h3("Difference"), h3(textOutput("GCI_diff")))),
                               column(3,
                                      div(h3("New rank"), h3(textOutput("GCI_rank")))),
-                               column(3,
+                              column(3,
                                      div(h3("Rank difference"), h3(textOutput("rank_diff"))))
                               , align = "center")
                           ),
                           
                           fluidRow(
-                            plotOutput("radar"))
+                            plotOutput("radar")
                           )
                  ),
                  
@@ -343,12 +520,14 @@ runApp(
                           actionButton("showTable10",label = "Market size"),
                           actionButton("showTable11",label = "Business sophistication"),
                           actionButton("showTable12",label = "Innovation"),
+                          actionButton("showTableGCI",label = "GCI"),
                           tableOutput(outputId = "table1")
-                 ))
+                 )
+              )
           
         )        
-      )
-    ),
+          )
+        ),
     server = shinyServer(function(input,output,session) {
       
       pill <- reactiveValues(temp1 = 0, temp2 = 0, temp3 = 0, temp4 = 0,
@@ -467,6 +646,11 @@ runApp(
         output$table1 <- renderTable(temp)
       })
       
+      observeEvent(input$showTableGCI, {
+        temp <- get_table_GCI()
+        output$table1 <- renderTable(temp)
+      })
+      
       observeEvent(input$calculate_gci, {
         
         tempA <- test_A(isolate(pill[["temp1"]]),isolate(pill[["temp2"]]),isolate(pill[["temp3"]]),isolate(pill[["temp4"]]))
@@ -482,52 +666,64 @@ runApp(
         
         output$rank_diff <- renderText(rank -get_diff(GCI(tempA, tempB, tempC)))
         
-        
-        
-        # plot radar
-        
-        radar_p=as.data.frame(matrix( sample( 2:20 , 12 , replace=T) , ncol=12))
-        colnames(radar_p)= col_names
-        
-        # To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each topic to show on the plot!
-        radar_p=rbind(rep(7,12) , rep(0,12) , radar_p)
-        
-        radar_p[4,] <- as.numeric(radar$Armenia)
-        
-        radar_p[3,] <-  c(isolate(pill[["temp1"]]),isolate(pill[["temp2"]]),isolate(pill[["temp3"]]),isolate(pill[["temp4"]]),
-                          isolate(pill[["temp5"]]),isolate(pill[["temp6"]]),isolate(pill[["temp7"]]),isolate(pill[["temp8"]]),
-                          isolate(pill[["temp9"]]),isolate(pill[["temp10"]]),isolate(pill[["temp11"]]),isolate(pill[["temp12"]]))
-        # The default radar chart proposed by the library:
-        
-        color_borders = c( rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9))
-        colors_in = c( rgb(0.2,0.5,0.5,0.4), rgb(0.8,0.2,0.5,0.4))
-        output$radar <-renderPlot({radarchart(radar_p, axistype = 1,
-                                              #custom polygon
-                                              pcol = color_borders, pfcol = colors_in, plwd = 4, plty = 1,
-                                              #custom grid
-                                              cglcol = "grey", cglty = 1, axislabcol = "grey", caxislabels = seq(0,9,1), cglwd = 1,
-                                              #custom labels
-                                              vlcex = 1.5)
-          legend(x = 0.8, y = 1.3, legend = c("New", "Old"), bty = "n", pch = 20, col = color_borders,
-                 text.col = "black", cex = 1.5, pt.cex = 2)
-        })
-        
+        # Radar function 1
+        get_rada1 <- function() {
+          # plot radar
+          radar <- data18AM[grep('pillar', data18AM$Series),]
+          radar$Series <- substr(x = radar$Series, start = 13, stop = 100)
+          radar_p=as.data.frame(matrix( sample( 2:20 , 12 , replace=T) , ncol=12))
+          colnames(radar_p)= radar$Series
+          
+          
+          # To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each topic to show on the plot!
+          radar_p=rbind(rep(7,12) , rep(0,12) , radar_p)
+          
+          radar_p[4,] <- as.numeric(radar$Armenia)
+          
+          radar_p[3,] <-  c(isolate(pill[["temp1"]]),isolate(pill[["temp2"]]),isolate(pill[["temp3"]]),isolate(pill[["temp4"]]),
+                            isolate(pill[["temp5"]]),isolate(pill[["temp6"]]),isolate(pill[["temp7"]]),isolate(pill[["temp8"]]),
+                            isolate(pill[["temp9"]]),isolate(pill[["temp10"]]),isolate(pill[["temp11"]]),isolate(pill[["temp12"]]))
+          # The default radar chart proposed by the library:
+          
+          color_borders = c( rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9))
+          colors_in = c( rgb(0.2,0.5,0.5,0.4), rgb(0.8,0.2,0.5,0.4))
+          output$radar <-renderPlot({radarchart(radar_p, axistype = 1,
+                                                #custom polygon
+                                                pcol = color_borders, pfcol = colors_in, plwd = 4, plty = 1,
+                                                #custom grid
+                                                cglcol = "grey", cglty = 1, axislabcol = "grey", caxislabels = seq(0,9,1), cglwd = 1,
+                                                #custom labels
+                                                vlcex = 1.5)
+            legend(x = 0.8, y = 1.3, legend = c("New", "Old"), bty = "n", pch = 20, col = color_borders,
+                   text.col = "black", cex = 1.5, pt.cex = 2)  
+            
+          })
+        } # function ends here
+        get_rada1()
       })
+      ### tab 3 
+      
+      
+      
+      out <- as.data.frame(pillars_all3[c(28,top_3_countries_index)])
+      output$table2 <- renderTable(out, striped = T)
     })
-  )
+    )
 )
 
 
-# try this thing on bitch
-set.seed(1)
-Mat <- matrix(rnorm(300), ncol = 10)
-combination <- combn(1:ncol(Mat), m = 2)
-sigma <- NULL
-for (i in 1:ncol(combination)) {
-  sigma <- c(sigma, summary(lm(Mat[,combination[1,i]] ~ Mat[,combination[2,i]]))$sigma)
-}
-sigma <- data.frame(sigma = sigma, comb_nr =  1:ncol(combination))
 
-
-
-c(summary(lm(Mat[,combination[1,1]] ~ Mat[,combination[2,1]]))$sigma, summary(lm(Mat[,combination[1,2]] ~ Mat[,combination[2,2]]))$sigma)
+# 
+# # REEE
+# library(rpart)
+# library(caret)
+# aa <- (rpart(pillars_all2[,combination2[1,1]] ~ pillars_all2[,combination2[2,1]]))
+# pred <- predict(aa, newdata = c(pillars_all2[,combination2[1,1]]) )
+# aaa <- summary(aa)
+# 
+# 
+# sigma_tree <- NULL
+# 
+# for (i in 1:ncol(combination2)) {
+#   sigma_tree <- c(sigma2, summary(lm(pillars_all2[,combination2[1,i]] ~ pillars_all2[,combination2[2,i]]))$sigma)
+# }
