@@ -109,11 +109,11 @@ if((data18AM[inflation, country_pos_this] > 0.5) & (data18AM[inflation, country_
   print(7)
   data18AM[inflation, country_pos_this] <- 7
 } else if (data18AM[inflation, country_pos_this] < 0.5) {
-  data18AM[inflation, country_pos_this]  <- star_pos(inflation, country_pos_all)
-  print(star_pos(inflation, country_pos_all))
+  data18AM[inflation, country_pos_this]  <- star_pos(inflation, country_pos)
+  print(star_pos(inflation, country_pos))
 } else {
-  data18AM[inflation, country_pos_this]  <- star_neg(inflation, country_pos_all)
-  print(star_pos(inflation, country_pos_all))
+  data18AM[inflation, country_pos_this]  <- star_neg(inflation, country_pos)
+  print(star_pos(inflation, country_pos))
 }
 
 pillars_all<- data18[grep('pillar', data18$Series),]
@@ -711,3 +711,4 @@ runApp(
     })
     )
 )
+
