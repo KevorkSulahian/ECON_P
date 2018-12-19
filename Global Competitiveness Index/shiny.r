@@ -230,9 +230,8 @@ get_number <- function(id, country) {
     select(country)
   return(temp[[1]])
 }
-country = temp33
-id = "A.06"
-get_number("A.05", temp33)
+
+# get_number("A.05", temp33)
 
 get_table <- function(id) {
   temp <- data.frame(t(data18_countries[data18$`Code GCR` %in% id,]), ordered = T)
@@ -267,6 +266,7 @@ get_table_GCI <- function() {
   colnames(temp) <- c("GCI", "Country", "Pillar_ Rank")
   temp$Pillar_Rank <- as.character(temp$`Pillar_ Rank`)
   temp2<- merge(temp, group2, by ="Country", all.x = T)
+  temp2$group<- as.character(temp2$group)
   return(temp2[,c(2,1,3,4,6)])
 }
 
