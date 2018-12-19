@@ -3,6 +3,7 @@ library(rpgm)
 library(shiny)
 library(shinydashboard)
 library(fmsb)
+library(stringr)
 
 data<- readxl::read_xlsx("data_main.xlsx", sheet = 2)
 
@@ -229,8 +230,9 @@ get_number <- function(id, country) {
     select(country)
   return(temp[[1]])
 }
-
-get_number("B.10", "Armenia")
+country = temp33
+id = "A.06"
+get_number("A.05", temp33)
 
 get_table <- function(id) {
   temp <- data.frame(t(data18_countries[data18$`Code GCR` %in% id,]), ordered = T)
@@ -252,6 +254,7 @@ get_table <- function(id) {
 # aa <- get_table("")
 get_table_GCI <- function() {
   temp <- data.frame(t(data18_countries[data18$`Code GCR` %in% "GCI",]), ordered = T)
+  
   colnames(temp) <- c("V1", "V2")
   # temp$V1 <- as.numeric(temp$V1)
   temp <- as.data.frame(temp[complete.cases(temp),])
@@ -262,12 +265,12 @@ get_table_GCI <- function() {
   temp$Rank <- data18_rank_cont[temp$Country %in% rownames(data18_rank_cont),]
   temp <- arrange(temp, desc(V1))
   colnames(temp) <- c("GCI", "Country", "Pillar_ Rank")
-  temp$Pillar_Rank <- as.character(temp$Rank)
+  temp$Pillar_Rank <- as.character(temp$`Pillar_ Rank`)
   temp2<- merge(temp, group2, by ="Country", all.x = T)
   return(temp2[,c(2,1,3,4,6)])
 }
 
-
+# get_table_GCI()
 get_diff <- function(number) {
   data18_rank[which(rownames(data18_rank) == "Armenia"),] <- number
   data18_rank <- data18_rank[order(data18_rank$data18_rank, decreasing = T),  , drop = F]
@@ -305,36 +308,76 @@ country.names <- as.character(group$Country)
 pillars_all3 <- pillars_all2 %>%
   select(c(country.names))
 
-combination2 <- combn(1:ncol(pillars_all3), m = 2)
+combination1 <- combn(1:ncol(pillars_all3), m = 2)
+combination1 <- as.data.frame(combination1)
+combination1 <- combination1[combination1[1,] %in% 28 | combination1[2,] %in% 28] #where 3 is armenia
+colnames(combination1) <- c(1:ncol(combination1))
+sigma1 <- NULL
+for (i in 1:ncol(combination1)) {
+  sigma1 <- c(sigma1, summary(lm(pillars_all3[,combination1[1,i]] ~ pillars_all3[,combination1[2,i]]))$sigma)
+}
+
+sigma1 <- as.data.frame(sigma1)
+sigma1$location <- rownames(sigma1)
+sigma1 <- sigma1[order(sigma1),]
+sigma1 <- sigma1[complete.cases(sigma1),]
+top_15 <- head(sigma1, n= 15)
+top_15_comb <- combination1[top_15$location]
+
+lenght_row = length(c(top_15_comb[top_15_comb[1,]%in% 28]))
+length_column =  length(c(top_15_comb[top_15_comb[2,]%in% 28])) 
+top_15_countries_index<- NULL
+
+# row
+for(i in 1:lenght_row) {
+  top_15_countries_index <- c(top_15_countries_index, top_15_comb[top_15_comb[1,]%in% 28][[i]][2])
+}
+# col
+for(i in 1:length_column) {
+  top_15_countries_index <- c(top_15_countries_index, top_15_comb[top_15_comb[2,]%in% 28][[i]][1])
+}
+
+# this way it's ordered
+top_15_countries  <- pillars_all3[top_15_countries_index]
+# top_3_countries <- pillars_all3[c(21,17,22,19,12,4,29,23,15,13,30,26,18,1,20)]
+
+
+
+### non grouped
+
+
+combination2 <- combn(1:144, m = 2)
 combination2 <- as.data.frame(combination2)
-combination2 <- combination2[combination2[1,] %in% 28 | combination2[2,] %in% 28] #where 3 is armenia
+combination2 <- combination2[combination2[1,] %in% 4 | combination2[2,] %in% 4] #where 3 is armenia
 colnames(combination2) <- c(1:ncol(combination2))
 sigma2 <- NULL
 for (i in 1:ncol(combination2)) {
-  sigma2 <- c(sigma2, summary(lm(pillars_all3[,combination2[1,i]] ~ pillars_all3[,combination2[2,i]]))$sigma)
+  sigma2 <- c(sigma2, summary(lm(pillars_all2[,combination2[1,i]] ~ pillars_all2[,combination2[2,i]]))$sigma)
 }
 
 sigma2 <- as.data.frame(sigma2)
 sigma2$location <- rownames(sigma2)
 sigma2 <- sigma2[order(sigma2),]
 sigma2 <- sigma2[complete.cases(sigma2),]
-top_3 <- head(sigma2, n= 15)
+rownames(sigma2) = NULL
+top_3 <- head(sigma2, n= 10)
 top_3_comb <- combination2[top_3$location]
 
-lenght_row = length(c(top_3_comb[top_3_comb[1,]%in% 28]))
-length_column =  length(c(top_3_comb[top_3_comb[2,]%in% 28])) 
+lenght_row = length(c(top_3_comb[top_3_comb[1,]%in% 4]))
+length_column =  length(c(top_3_comb[top_3_comb[2,]%in% 4])) 
 top_3_countries_index<- NULL
 
 # row
 for(i in 1:lenght_row) {
-  top_3_countries_index <- c(top_3_countries_index, top_3_comb[top_3_comb[1,]%in% 28][[i]][2])
+  top_3_countries_index <- c(top_3_countries_index, top_3_comb[top_3_comb[1,]%in% 4][[i]][2])
 }
 # col
 for(i in 1:length_column) {
-  top_3_countries_index <- c(top_3_countries_index, top_3_comb[top_3_comb[2,]%in% 28][[i]][1])
+  top_3_countries_index <- c(top_3_countries_index, top_3_comb[top_3_comb[2,]%in% 4][[i]][1])
 }
-# this way it's ordered
-top_3_countries <- pillars_all3[c(21,17,22,19,12,4,29,23,15,13,30,26,18,1,20)]
+
+non_grouped_countries <- pillars_all2[,top_3_countries_index]
+
 
 
 # radar <- data18AM[grep('pillar', data18AM$Series),]
@@ -397,13 +440,53 @@ top_3_countries <- pillars_all3[c(21,17,22,19,12,4,29,23,15,13,30,26,18,1,20)]
 
 
 
+a1 <- get_table("A.01")
+a1 <- a1[c(1,3)]
+a1 <- paste0(a1$`Pillar Rank`, " - ", a1$Country)
 
+a2 <- get_table("A.02")
+a2 <- a2[c(1,3)]
+a2 <- paste0(a2$`Pillar Rank`, " - ", a2$Country)
 
+a3 <- get_table("A.03")
+a3 <- a3[c(1,3)]
+a3 <- paste0(a3$`Pillar Rank`, " - ", a3$Country)
 
+a4 <- get_table("A.04")
+a4 <- a4[c(1,3)]
+a4 <- paste0(a4$`Pillar Rank`, " - ", a4$Country)
 
+a5 <- get_table("B.05")
+a5 <- a5[c(1,3)]
+a5 <- paste0(a5$`Pillar Rank`, " - ", a5$Country)
 
+a6 <- get_table("B.06")
+a6 <- a6[c(1,3)]
+a6 <- paste0(a6$`Pillar Rank`, " - ", a6$Country)
 
+a7 <- get_table("B.07")
+a7 <- a7[c(1,3)]
+a7 <- paste0(a7$`Pillar Rank`, " - ", a7$Country)
 
+a8 <- get_table("B.08")
+a8 <- a8[c(1,3)]
+a8 <- paste0(a8$`Pillar Rank`, " - ", a8$Country)
+
+a9 <- get_table("B.09")
+a9 <- a9[c(1,3)]
+a9 <- paste0(a9$`Pillar Rank`, " - ", a9$Country)
+
+a10 <- get_table("B.10")
+a10 <- a10[c(1,3)]
+a10 <- paste0(a10$`Pillar Rank`, " - ", a10$Country)
+
+a11 <- get_table("C.11")
+a11 <- a11[c(1,3)]
+a11 <- paste0(a11$`Pillar Rank`, " - ", a11$Country)
+
+a12 <- get_table("C.12")
+a12 <- a12[c(1,3)]
+a12 <- paste0(a12$`Pillar Rank`, " - ", a12$Country)
 
 
 
@@ -432,7 +515,8 @@ runApp(
             height : 100%;}
             #table1{ font-size:16px; margin: 10px }
             #table2{ font-size:16px; margin: 10px }
-
+            #table3{ font-size:16px; margin: 10px }
+            
             '
           ))
           ),
@@ -442,12 +526,12 @@ runApp(
                           
                           fluidRow(
                             column(4,
-                                   fluidRow(selectInput("A.01", "Institutions", choices = colnames(data18_countries), selected = "Armenia")),
-                                   fluidRow(selectInput("A.02", "Infrastructure", choices = colnames(data18_countries), selected = "Armenia")),
-                                   fluidRow(selectInput("A.03", "Macroeconomic environment", choices = colnames(data18_countries), selected = "Armenia")),
-                                   fluidRow(selectInput("A.04", "Health and primary education", choices = colnames(data18_countries), selected = "Armenia")),
-                                   fluidRow(selectInput("B.05", "Higher education and training", choices = colnames(data18_countries), selected = "Armenia")),
-                                   fluidRow(selectInput("B.06", "Goods market efficiency", choices = colnames(data18_countries), selected = "Armenia"))),
+                                   fluidRow(selectInput("A.01", "Institutions", choices = a1, selected = a1[55])),
+                                   fluidRow(selectInput("A.02", "Infrastructure", choices = a2, selected = a2[80])),
+                                   fluidRow(selectInput("A.03", "Macroeconomic environment", choices = a3, selected = a3[101])),
+                                   fluidRow(selectInput("A.04", "Health and primary education", choices = a4, selected = a4[55])),
+                                   fluidRow(selectInput("B.05", "Higher education and training", choices = a5, selected = a5[69])),
+                                   fluidRow(selectInput("B.06", "Goods market efficiency", choices = a6, selected = a6[35]))),
                             
                             column(2,
                                    fluidRow(h3(textOutput("A.01_out"))), 
@@ -459,12 +543,12 @@ runApp(
                             ),
                             
                             column(4,
-                                   fluidRow(selectInput("B.07", "Labor market efficiency", choices = colnames(data18_countries), selected = "Armenia")),
-                                   fluidRow(selectInput("B.08", "Financial market development", choices = colnames(data18_countries), selected = "Armenia")),
-                                   fluidRow(selectInput("B.09", "Technological readiness", choices = colnames(data18_countries), selected = "Armenia")),
-                                   fluidRow(selectInput("B.10", "Market size", choices = colnames(data18_countries), selected = "Armenia")),
-                                   fluidRow(selectInput("C.11", "Business sophistication", choices = colnames(data18_countries), selected = "Armenia")),
-                                   fluidRow(selectInput("C.12", "Innovation", choices = colnames(data18_countries), selected = "Armenia"))),
+                                   fluidRow(selectInput("B.07", "Labor market efficiency", choices = a7, selected = a7[51])),
+                                   fluidRow(selectInput("B.08", "Financial market development", choices = a8, selected = a8[78])),
+                                   fluidRow(selectInput("B.09", "Technological readiness", choices = a9, selected = a9[77])),
+                                   fluidRow(selectInput("B.10", "Market size", choices = a10, selected = a10[115])),
+                                   fluidRow(selectInput("C.11", "Business sophistication", choices = a11, selected = a11[68])),
+                                   fluidRow(selectInput("C.12", "Innovation", choices = a12, selected = a12[79]))),
                             
                             column(2,
                                    fluidRow(h3(textOutput("B.07_out"))),
@@ -476,13 +560,24 @@ runApp(
                             )),
                           
                           fluidRow(
-                            div(style = "text-align: center",h2("Closest countries by pillars"))
+                            div(style = "text-align: center",h2("Closest countries by pillars and GDP"))
                             
                           ),
                           
                           fluidRow(
                             column(12,
                                    tableOutput(outputId = "table2"))
+                            
+                          ),
+                          
+                          fluidRow(
+                            div(style = "text-align: center",h2("Closest countries by pillars"))
+                            
+                          ),
+                          
+                          fluidRow(
+                            column(12,
+                                   tableOutput(outputId = "table3"))
                             
                           ),
                           
@@ -524,7 +619,7 @@ runApp(
                           actionButton("showTableGCI",label = "GCI"),
                           tableOutput(outputId = "table1")
                  )
-              )
+          )
           
         )        
           )
@@ -539,54 +634,77 @@ runApp(
       # isolate(pill[['temp1']])
       
       observeEvent(input$A.01, {
-        output$A.01_out <-renderText( get_number("A.01", input$A.01))
-        
-        pill$temp1 <- (get_number("A.01", input$A.01))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$A.01, replacement = "")
+        temp33 <- substring(temp33, 4)
+        temp33 <- knitr::combine_words(temp33,and = "", sep = " ")
+        output$A.01_out <-renderText(get_number("A.01", temp33))
+        pill$temp1 <- (get_number("A.01", temp33))
       })
       observeEvent(input$A.02, {
-        output$A.02_out <- renderText(get_number("A.02", input$A.02))
-        
-        pill$temp2 <- (get_number("A.02", input$A.02))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$A.02, replacement = "")
+        temp33 <- substring(temp33, 4)
+        output$A.02_out <-renderText( get_number("A.02", temp33))
+        pill$temp2 <- (get_number("A.02", temp33))
       })
       observeEvent(input$A.03, {
-        output$A.03_out <- renderText(get_number("A.03", input$A.03))
-        pill$temp3 <- (get_number("A.03", input$A.03))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$A.03, replacement = "")
+        temp33 <- substring(temp33, 4)
+        output$A.03_out <-renderText( get_number("A.03", temp33))
+        pill$temp3 <- (get_number("A.03", temp33))
       })
       observeEvent(input$A.04, {
-        output$A.04_out <- renderText(get_number("A.04", input$A.04))
-        pill$temp4 <- (get_number("A.04", input$A.04))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$A.04, replacement = "")
+        temp33 <- substring(temp33, 4)
+        output$A.04_out <-renderText( get_number("A.04", temp33))
+        pill$temp4 <- (get_number("A.04", temp33))
       })
       observeEvent(input$B.05, {
-        output$B.05_out <- renderText(get_number("B.05", input$B.05))
-        pill$temp5 <- (get_number("B.05", input$B.05))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$B.05, replacement = "")
+        temp33 <- substring(temp33, 4)
+        output$B.05_out <-renderText( get_number("B.05", temp33))
+        pill$temp5 <- (get_number("B.05", temp33))
       })
       observeEvent(input$B.06, {
-        output$B.06_out <- renderText(get_number("B.06", input$B.06))
-        pill$temp6 <- (get_number("B.06", input$B.06))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$B.06, replacement = "")
+        temp33 <- substring(temp33, 4)
+        output$B.06_out <-renderText( get_number("B.06", temp33))
+        pill$temp6 <- (get_number("B.06", temp33))
       })
       observeEvent(input$B.07, {
-        output$B.07_out <- renderText(get_number("B.07", input$B.07))
-        pill$temp7 <- (get_number("B.07", input$B.07))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$B.07, replacement = "")
+        temp33 <- substring(temp33, 4)
+        output$B.07_out <-renderText( get_number("B.07", temp33))
+        pill$temp7 <- (get_number("B.07", temp33))
       })
       observeEvent(input$B.08, {
-        output$B.08_out <- renderText(get_number("B.08", input$B.08))
-        pill$temp8 <- (get_number("B.08", input$B.08))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$B.08, replacement = "")
+        temp33 <- substring(temp33, 4)
+        output$B.08_out <-renderText( get_number("B.08", temp33))
+        pill$temp8 <- (get_number("B.08", temp33))
       })
       observeEvent(input$B.09, {
-        output$B.09_out <- renderText(get_number("B.09", input$B.09))
-        pill$temp9 <- (get_number("B.09", input$B.09))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$B.09, replacement = "")
+        temp33 <- substring(temp33, 4)
+        output$B.09_out <-renderText( get_number("B.09", temp33))
+        pill$temp9 <- (get_number("B.09", temp33))
       })
       observeEvent(input$B.10, {
-        output$B.10_out <- renderText(get_number("B.10", input$B.10))
-        pill$temp10 <- (get_number("B.10", input$B.10))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$B.10, replacement = "")
+        temp33 <- substring(temp33, 4)
+        output$B.10_out <-renderText( get_number("B.10", temp33))
+        pill$temp10 <- (get_number("B.10", temp33))
       })
       observeEvent(input$C.11, {
-        output$C.11_out <- renderText(get_number("C.11", input$C.11))
-        pill$temp11 <- (get_number("C.11", input$C.11))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$C.11, replacement = "")
+        temp33 <- substring(temp33, 4)
+        output$C.11_out <-renderText( get_number("C.11", temp33))
+        pill$temp11 <- (get_number("C.11", temp33))
       })
       observeEvent(input$C.12, {
-        output$C.12_out <- renderText(get_number("C.12", input$C.12))
-        pill$temp12 <- (get_number("C.12", input$C.12))
+        temp33 <- gsub(pattern = "[0-9]",x =   input$C.12, replacement = "")
+        temp33 <- substring(temp33, 4)
+        output$C.12_out <-renderText( get_number("C.12", temp33))
+        pill$temp12 <- (get_number("C.12", temp33))
       })
       
       
@@ -706,8 +824,12 @@ runApp(
       
       
       
-      out <- as.data.frame(pillars_all3[c(28,top_3_countries_index)])
+      out <- as.data.frame(pillars_all3[c(28,top_15_countries_index)])
       output$table2 <- renderTable(out, striped = T)
+      
+      out2 <- as.data.frame(pillars_all2[c(4,top_3_countries_index)])
+      output$table3 <- renderTable(out2, striped = T)
+      
     })
     )
 )
