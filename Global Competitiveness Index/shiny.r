@@ -263,15 +263,15 @@ get_table_GCI <- function() {
   temp22 <- temp22[temp22$Country %in% rownames(data18_rank_cont),]
   temp22$Rank <- data18_rank_cont[temp22$Country %in% rownames(data18_rank_cont),]
   
-  colnames(temp22) <- c("GCI", "Country", "Pillar_ Rank")
-  temp22$Pillar_Rank <- as.character(temp22$`Pillar_ Rank`)
+  colnames(temp22) <- c("GCI", "Country", "GCI Rank")
+  temp22$`GCI Rank` <- as.character(temp22$`GCI Rank`)
   temp22<- merge(temp22, group2, by ="Country", all.x = T)
   temp22$group<- as.character(temp22$group)
   temp22 <- arrange(temp22, desc(GCI))
-  return(temp22[,c(1,2,3,5,7)])
+  return(temp22[,c(1,2,3,4,6)])
 }
 
-# get_table_GCI()
+ get_table_GCI()
 get_diff <- function(number) {
   data18_rank[which(rownames(data18_rank) == "Armenia"),] <- number
   data18_rank <- data18_rank[order(data18_rank$data18_rank, decreasing = T),  , drop = F]
@@ -643,7 +643,7 @@ runApp(
                           
                           fluidRow(
                             div(style = "text-align: center",h2("Closest countries by pillars"))
-
+                            
                           ),
                           
                           fluidRow(
@@ -874,11 +874,11 @@ runApp(
           
           ## adding the interactive table? 
           temp2 <- c(isolate(pill[["temp1"]]),isolate(pill[["temp2"]]),isolate(pill[["temp3"]]),isolate(pill[["temp4"]]),
-                    isolate(pill[["temp5"]]),isolate(pill[["temp6"]]),isolate(pill[["temp7"]]),isolate(pill[["temp8"]]),
-                    isolate(pill[["temp9"]]),isolate(pill[["temp10"]]),isolate(pill[["temp11"]]),isolate(pill[["temp12"]]))
+                     isolate(pill[["temp5"]]),isolate(pill[["temp6"]]),isolate(pill[["temp7"]]),isolate(pill[["temp8"]]),
+                     isolate(pill[["temp9"]]),isolate(pill[["temp10"]]),isolate(pill[["temp11"]]),isolate(pill[["temp12"]]))
           
           data_temp <- interactive_table(temp2)
- 
+          
           out1 <- pillars_all3[28]
           out1[,] <- temp2
           data_temp$Armenia <- out1
@@ -886,7 +886,7 @@ runApp(
             select(Armenia, everything())
           
           output$table2 <- renderTable(data_temp, striped = T)
-        
+          
           
           
           
