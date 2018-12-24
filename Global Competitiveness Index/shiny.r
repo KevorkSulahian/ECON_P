@@ -565,7 +565,7 @@ runApp(
             #radar {min-height: 1000px;}
             #radar > img {width : 100%;
             height : 100%;}
-            #table1{ font-size:16px; margin: 45px 0}
+            #table1{ font-size:16px; margin: 45px 0 }
             #table2{ font-size:16px; margin: 45px 0 }
             #table3{ font-size:16px; margin: 45px 0 }
             
@@ -876,7 +876,7 @@ runApp(
           temp2 <- c(isolate(pill[["temp1"]]),isolate(pill[["temp2"]]),isolate(pill[["temp3"]]),isolate(pill[["temp4"]]),
                     isolate(pill[["temp5"]]),isolate(pill[["temp6"]]),isolate(pill[["temp7"]]),isolate(pill[["temp8"]]),
                     isolate(pill[["temp9"]]),isolate(pill[["temp10"]]),isolate(pill[["temp11"]]),isolate(pill[["temp12"]]))
-          write.csv(temp2, "here.csv")
+          
           data_temp <- interactive_table(temp2)
  
           out1 <- pillars_all3[28]
