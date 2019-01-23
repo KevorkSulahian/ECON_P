@@ -58,6 +58,7 @@ for (i in 1:nrow(data18AM)) {
   }
 }
 
+
 library(dplyr)
 library(rpgm)
 
@@ -132,7 +133,7 @@ similars <- data.frame(res2, correlation = corr[res2])
 similars <- similars[complete.cases(similars),]
 similars <- similars[similars$row %in% 5 | similars$col %in% 5,]
 
-corr[27,]
+# corr[27,]
 
 
 
@@ -252,22 +253,23 @@ get_table <- function(id) {
 # id = "GCI"
 # aa <- get_table("")
 get_table_GCI <- function() {
-  temp <- data.frame(t(data18_countries[data18$`Code GCR` %in% "GCI",]), ordered = T)
+  temp22 <- data.frame(t(data18_countries[data18$`Code GCR` %in% "GCI",]), ordered = T)
   
-  colnames(temp) <- c("V1", "V2")
+  colnames(temp22) <- c("V1", "V2")
   # temp$V1 <- as.numeric(temp$V1)
-  temp <- as.data.frame(temp[complete.cases(temp),])
+  temp22 <- as.data.frame(temp22[complete.cases(temp22),])
   
-  temp$V2 <- rownames(temp)
-  colnames(temp) <- c("V1", "Country")
-  temp <- temp[temp$Country %in% rownames(data18_rank_cont),]
-  temp$Rank <- data18_rank_cont[temp$Country %in% rownames(data18_rank_cont),]
-  temp <- arrange(temp, desc(V1))
-  colnames(temp) <- c("GCI", "Country", "Pillar_ Rank")
-  temp$Pillar_Rank <- as.character(temp$`Pillar_ Rank`)
-  temp2<- merge(temp, group2, by ="Country", all.x = T)
-  temp2$group<- as.character(temp2$group)
-  return(temp2[,c(2,1,3,4,6)])
+  temp22$V2 <- rownames(temp22)
+  colnames(temp22) <- c("V1", "Country")
+  temp22 <- temp22[temp22$Country %in% rownames(data18_rank_cont),]
+  temp22$Rank <- data18_rank_cont[temp22$Country %in% rownames(data18_rank_cont),]
+  
+  colnames(temp22) <- c("GCI", "Country", "Pillar_ Rank")
+  temp22$Pillar_Rank <- as.character(temp22$`Pillar_ Rank`)
+  temp22<- merge(temp22, group2, by ="Country", all.x = T)
+  temp22$group<- as.character(temp22$group)
+  temp22 <- arrange(temp22, desc(GCI))
+  return(temp22[,c(1,2,3,5,7)])
 }
 
 # get_table_GCI()
@@ -308,45 +310,96 @@ country.names <- as.character(group$Country)
 pillars_all3 <- pillars_all2 %>%
   select(c(country.names))
 
-combination1 <- combn(1:ncol(pillars_all3), m = 2)
-combination1 <- as.data.frame(combination1)
-combination1 <- combination1[combination1[1,] %in% 28 | combination1[2,] %in% 28] #where 3 is armenia
-colnames(combination1) <- c(1:ncol(combination1))
-sigma1 <- NULL
-for (i in 1:ncol(combination1)) {
-  sigma1 <- c(sigma1, summary(lm(pillars_all3[,combination1[1,i]] ~ pillars_all3[,combination1[2,i]]))$sigma)
+
+
+
+
+pillars_all2 <- pillars_all2[-c(138:144)]
+
+interactive_table_grouped <- function(temp2) {
+  # temp = c(1,2,3,4,5,6,7,7,7,7,7,7)
+  pillars_all3$Armenia = temp2
+  
+  combination1 <- combn(1:ncol(pillars_all3), m = 2)
+  combination1 <- as.data.frame(combination1)
+  combination1 <- combination1[combination1[1,] %in% 28 | combination1[2,] %in% 28] #where 28 is armenia
+  colnames(combination1) <- c(1:ncol(combination1))
+  sigma1 <- NULL
+  for (i in 1:ncol(combination1)) {
+    sigma1 <- c(sigma1, summary(lm(pillars_all3[,combination1[1,i]] ~ pillars_all3[,combination1[2,i]]))$sigma)
+  }
+  
+  sigma1 <- as.data.frame(sigma1)
+  sigma1$location <- rownames(sigma1)
+  sigma1 <- sigma1[order(sigma1),]
+  sigma1 <- sigma1[complete.cases(sigma1),]
+  top_15 <- head(sigma1, n= 10)
+  top_15_comb <- combination1[top_15$location]
+  
+  lenght_row = length(c(top_15_comb[top_15_comb[1,]%in% 28]))
+  length_column =  length(c(top_15_comb[top_15_comb[2,]%in% 28])) 
+  top_15_countries_index<- NULL
+  # row
+  for(i in 1:lenght_row) {
+    # top_15_countries_index <- c(top_15_countries_index, top_15_comb[top_15_comb[1,]%in% 28][[i]][2])
+  }
+  # col
+  for(i in 1:length_column) {
+    top_15_countries_index <- c(top_15_countries_index, top_15_comb[top_15_comb[2,]%in% 28][[i]][1])
+  }
+  
+  # this way it's ordered
+  top_15_countries  <- pillars_all3[top_15_countries_index]
+  # top_3_countries <- pillars_all3[c(21,17,22,19,12,4,29,23,15,13,30,26,18,1,20)]
+  
 }
 
-sigma1 <- as.data.frame(sigma1)
-sigma1$location <- rownames(sigma1)
-sigma1 <- sigma1[order(sigma1),]
-sigma1 <- sigma1[complete.cases(sigma1),]
-top_15 <- head(sigma1, n= 15)
-top_15_comb <- combination1[top_15$location]
+## non grouped interactive
 
-lenght_row = length(c(top_15_comb[top_15_comb[1,]%in% 28]))
-length_column =  length(c(top_15_comb[top_15_comb[2,]%in% 28])) 
-top_15_countries_index<- NULL
-
-# row
-for(i in 1:lenght_row) {
-  top_15_countries_index <- c(top_15_countries_index, top_15_comb[top_15_comb[1,]%in% 28][[i]][2])
+interactive_table <- function(temp2) {
+  # temp = c(1,2,3,4,5,6,7,7,7,7,7,7)
+  pillars_all2$Armenia = temp2
+  
+  combination1 <- combn(1:ncol(pillars_all2), m = 2)
+  combination1 <- as.data.frame(combination1)
+  combination1 <- combination1[combination1[1,] %in% 4 | combination1[2,] %in% 4] #where 28 is armenia
+  colnames(combination1) <- c(1:ncol(combination1))
+  sigma1 <- NULL
+  for (i in 1:ncol(combination1)) {
+    sigma1 <- c(sigma1, summary(lm(pillars_all2[,combination1[1,i]] ~ pillars_all2[,combination1[2,i]]))$sigma)
+  }
+  
+  sigma1 <- as.data.frame(sigma1)
+  sigma1$location <- rownames(sigma1)
+  sigma1 <- sigma1[order(sigma1),]
+  sigma1 <- sigma1[complete.cases(sigma1),]
+  top_15 <- head(sigma1, n= 10)
+  top_15_comb <- combination1[top_15$location]
+  
+  lenght_row = length(c(top_15_comb[top_15_comb[1,]%in% 4]))
+  length_column =  length(c(top_15_comb[top_15_comb[2,]%in% 4])) 
+  top_15_countries_index<- NULL
+  # row
+  for(i in 1:lenght_row) {
+    top_15_countries_index <- c(top_15_countries_index, top_15_comb[top_15_comb[1,]%in% 4][[i]][2])
+  }
+  # col
+  for(i in 1:length_column) {
+    top_15_countries_index <- c(top_15_countries_index, top_15_comb[top_15_comb[2,]%in% 4][[i]][1])
+  }
+  
+  # this way it's ordered
+  top_15_countries  <- pillars_all2[top_15_countries_index]
+  # top_3_countries <- pillars_all2[c(21,17,22,19,12,4,29,23,15,13,30,26,18,1,20)]
+  
 }
-# col
-for(i in 1:length_column) {
-  top_15_countries_index <- c(top_15_countries_index, top_15_comb[top_15_comb[2,]%in% 28][[i]][1])
-}
-
-# this way it's ordered
-top_15_countries  <- pillars_all3[top_15_countries_index]
-# top_3_countries <- pillars_all3[c(21,17,22,19,12,4,29,23,15,13,30,26,18,1,20)]
-
 
 
 ### non grouped
-pillars_all2 <- pillars_all2[-c(138:144)]
 
-combination2 <- combn(1:144, m = 2)
+
+
+combination2 <- combn(1:length(colnames(pillars_all2)), m = 2)
 combination2 <- as.data.frame(combination2)
 combination2 <- combination2[combination2[1,] %in% 4 | combination2[2,] %in% 4] #where 3 is armenia
 colnames(combination2) <- c(1:ncol(combination2))
@@ -513,9 +566,9 @@ runApp(
             #radar {min-height: 1000px;}
             #radar > img {width : 100%;
             height : 100%;}
-            #table1{ font-size:16px; margin: 10px }
-            #table2{ font-size:16px; margin: 10px }
-            #table3{ font-size:16px; margin: 10px }
+            #table1{ font-size:16px; margin: 45px 0 }
+            #table2{ font-size:16px; margin: 45px 0 }
+            #table3{ font-size:16px; margin: 45px 0 }
             
             '
           ))
@@ -526,7 +579,7 @@ runApp(
                           
                           fluidRow(
                             column(4,
-                                   fluidRow(selectInput("A.01", "Institutions", choices = a1, selected = a1[55])),
+                                   fluidRow(selectInput("A.01", "Institutions", choices = a1, selected = a1[55])), ## 55
                                    fluidRow(selectInput("A.02", "Infrastructure", choices = a2, selected = a2[80])),
                                    fluidRow(selectInput("A.03", "Macroeconomic environment", choices = a3, selected = a3[101])),
                                    fluidRow(selectInput("A.04", "Health and primary education", choices = a4, selected = a4[55])),
@@ -559,16 +612,7 @@ runApp(
                                    fluidRow(h3(textOutput("C.12_out")))   
                             )),
                           
-                          fluidRow(
-                            div(style = "text-align: center",h2("Closest countries by pillars and GDP"))
-                            
-                          ),
                           
-                          fluidRow(
-                            column(12,
-                                   tableOutput(outputId = "table2"))
-                            
-                          ),
                           
                           fluidRow(
                             div(style = "text-align: center",h2("Closest countries by pillars"))
@@ -596,6 +640,17 @@ runApp(
                               column(3,
                                      div(h3("Rank difference"), h3(textOutput("rank_diff"))))
                               , align = "center")
+                          ),
+                          
+                          fluidRow(
+                            div(style = "text-align: center",h2("Closest countries by pillars"))
+
+                          ),
+                          
+                          fluidRow(
+                            column(12,
+                                   tableOutput(outputId = "table2"))
+                            
                           ),
                           
                           fluidRow(
@@ -817,10 +872,30 @@ runApp(
                    text.col = "black", cex = 1.5, pt.cex = 2)  
             
           })
+          
+          ## adding the interactive table? 
+          temp2 <- c(isolate(pill[["temp1"]]),isolate(pill[["temp2"]]),isolate(pill[["temp3"]]),isolate(pill[["temp4"]]),
+                    isolate(pill[["temp5"]]),isolate(pill[["temp6"]]),isolate(pill[["temp7"]]),isolate(pill[["temp8"]]),
+                    isolate(pill[["temp9"]]),isolate(pill[["temp10"]]),isolate(pill[["temp11"]]),isolate(pill[["temp12"]]))
+          
+          data_temp <- interactive_table(temp2)
+ 
+          out1 <- pillars_all3[28]
+          out1[,] <- temp2
+          data_temp$Armenia <- out1
+          data_temp <- data_temp%>%
+            select(Armenia, everything())
+          
+          output$table2 <- renderTable(data_temp, striped = T)
+        
+          
+          
+          
         } # function ends here
         get_rada1()
       })
       ### tab 3 
+      
       
       
       

@@ -39,6 +39,8 @@ runApp(
       ))
     ,
     server = shinyServer(function(input, output,session) {
+      
+      
       choice <- reactive({
         inFile1 <- input$file1
         if (is.null(inFile1))
@@ -49,6 +51,7 @@ runApp(
         choices <- unique(df$Year)
         return (choices)
       })
+      
       
       my_data <- reactive({
         
@@ -134,6 +137,7 @@ runApp(
                                    by = c("Name","ID"),  suffix = c(paste0(".",years[1]), paste0(".",years[2])))
         first_output[,'Year.2017'] <- NULL
         first_output[,'Year.2018'] <- NULL
+        
         if (input$Expimp == "All") {
           all <- inner_join(final_year1, final_year2, by = c("Name","ID"),  suffix = c(paste0(".",years[1]), paste0(".",years[2])))
           all[,paste0("Year.",years[1])] <- NULL
@@ -181,6 +185,7 @@ runApp(
           options(scipen=999)
           return (imp2)
         }
+        
 
         join_and_output <- function(df1, df2, exp_imp){
 
@@ -195,7 +200,7 @@ runApp(
           }
 
 
-          groups <- final[is.na(final$ID),c(1,13)]
+          groups <- final[is.na(final$ID),c(1,12)]
           groups_sort <- groups[order(groups$Abs_Growth),]
           groups_sort['ord']<-order(groups_sort$Abs_Growth)
           final <- left_join(final,groups_sort[,c(1,3)],by="Name")
@@ -261,12 +266,18 @@ runApp(
         return (final)
         
       })
+      
+      
       output$txt <- renderText({
         "Instructions:"
       })
+      
+      
       observe({
         updateSelectInput(session,"year",choices=choice())
       })
+      
+      
       observeEvent(
         eventExpr = input[["submit_loc"]],
         handlerExpr = {
@@ -274,6 +285,9 @@ runApp(
           output$table <- renderDataTable({
           my_data()
       }) })
+      
+      
+      
       output$downloadData <- downloadHandler(
         filename = function() {
             ("untitled.xlsx")

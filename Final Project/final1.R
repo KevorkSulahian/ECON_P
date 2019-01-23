@@ -2,7 +2,7 @@ library(stringr)
 library(utf8)
 library(ggplot2)
 library(shiny)
-library(shinyjs)
+# library(shinyjs)
 library(shinydashboard)
 library(rsconnect)
 library(dplyr)
@@ -13,20 +13,29 @@ runApp(
     ui = dashboardPage(
       dashboardHeader(),
       dashboardSidebar( 
+        tags$head(
+          tags$style(HTML(
+            '
+            #tabs {display: grid;
+                  text-align: center;}
+            '
+          ))
+        ),
         fileInput('file1', 'Հիմնական դատան',
                   accept = c(".xlsx")),
         fileInput('file2', 'Բոլոր կոդերով դատան',
                   accept = c(".xlsx")),
+        
+        
         tabsetPanel(id = 'first_ch',
           
-        
-        
-        
         tabPanel("Որոնում", fluid=TRUE,
         selectInput(inputId = "Expimp",label="Ներմուծում թե Արտահանում",
                     choices= c("Արտահանում","Ներմուծում")),
+        
         tabsetPanel(id = "tabs",
-          tabPanel("Տարեկան", fluid = TRUE,
+          
+          tabPanel("Տարեկան", fluid = F,
                    
                    
                    selectInput(inputId = "year",label="Ընտրել տարին",
@@ -38,13 +47,12 @@ runApp(
                    
                    
           ),
-          tabPanel("Ամսեկան", fluid = TRUE,
+          tabPanel("Ամսեկան", fluid = F,
                    selectInput(inputId =  "Monthly", label = "Ընտրեք ներկայացման տեսակը",
                                choices =c("Գումարային","Ամեն ամսյա")),
                    selectInput(inputId = "year_m",label="Ընտրել տարին",
-                               choices= c("2007","2008","2009","2010","2011",
-                                          "2012","2013","2014","2015",
-                                          "2016","2017","2018"),multiple = TRUE),
+                               choices= c("2007","2008","2009","2010","2011", "2012","2013","2014","2015", "2016","2017","2018")
+                               ,multiple = TRUE),
                    selectInput(inputId = "month_m", label = "Ընտրել Ամիսը",
                                choices = c("Հունվար","Փետրվար","Մարտ","Ապրիլ","Մայիս","Հունիս","Հուլիս"
                                            ,"Օգոստոս","Սեպտեմբեր",
@@ -53,7 +61,7 @@ runApp(
                    
                    
           ),
-          tabPanel("Եռամսյակային", fluid = TRUE,
+          tabPanel("Եռամսյակային", fluid = F, 
                    
                    selectInput(inputId = "year_t",label="Ընտրել տարին",
                                choices= c("2007","2008","2009","2010","2011",
@@ -84,32 +92,53 @@ runApp(
       downloadButton("downloadData", "Download",class="butt1")),
       
       dashboardBody(
+        tabsetPanel(id = "page2",
+                    tabPanel("tab1",
+                             dataTableOutput("table"),
+                             plotOutput("plot1")
+                             ),
+                    tabPanel("tab2",
+                             dataTableOutput("table2")
+                    )
+                    )
         # fluidRow(
         # tags$hr(),
-        dataTableOutput("table"),
-        plotOutput("plot1")
+        
         # )
       ))
     ,
     server = shinyServer(function(input, output,session) {
+      
+      
+      ## Year AGG function 1
+      
       year_agg <- function(df, Year,main){
-        ####
+        #### getting names without ID
         titles <- main[is.na(main$ID),'Name']
+        
         counter <- 1
+        # giving group ID
         for (i in c(1:nrow(titles))){
           titles[i,'Group'] = counter
           counter = counter +1
         }
         #####
+        
+        # getting by year
         df_Year <- df[df$Year == Year,]
+        
+        # group by ID
         agg_df_Year <- df_Year %>%
           group_by(ID) %>%
           summarise(Export_in_tonnas = sum(Export_in_tonnas),
                     Export = sum(Export),
                     Import_in_tonnas = sum(Import_in_tonnas),
                     Import = sum(Import))
+        # join main and add_df_year
         polufinal_Year_1 <- left_join(main, agg_df_Year, by = "ID")
         polufinal_Year_1['Year'] <- Year
+        
+        # id based on group
         counter <- 0
         for (i in c(1:nrow(polufinal_Year_1))){
           polufinal_Year_1[i,'Group'] = counter
@@ -118,10 +147,13 @@ runApp(
             counter = counter + 1
           }
         }
+        
+        #deleting rows without id
         polufinal_Year_1[is.na(polufinal_Year_1$ID),'Group']<- NA
+        # change number to 0 for rows with insufficent data
         polufinal_Year_1[3:6][is.na(polufinal_Year_1[3:6])] <- 0
         
-        
+        # group by group 
         agg_total_Year <-polufinal_Year_1 %>%
           group_by(Group)  %>%
           summarise(Total_Export_in_tonnas = sum(Export_in_tonnas),
@@ -130,9 +162,12 @@ runApp(
                     Total_Import = sum(Import))
         agg_total_Year <- agg_total_Year[complete.cases(agg_total_Year), ]
         
-        
+        #######################################################
+        ################################## one group is being deleted
         polufinal_Year_2 <- left_join(titles, agg_total_Year, by = "Group")
         polufinal_Year_2['Group'] <- NULL
+        
+        
         final_Year <- left_join(polufinal_Year_1,polufinal_Year_2, by = "Name")
         
         for (i in c(1:nrow(final_Year))){
@@ -146,14 +181,19 @@ runApp(
         colnames(final_Year) <- c("Name","ID",paste0(colnames(final_Year[,c(3:6)]), ".",year))
         
         return (final_Year)
-      }
+      } ##### Year agg ends here
+      
+      
+      
+      ## Get main function 2
+      
       get_main <- function(){
         ########Reading the main file
         inFile2 <- input$file2
         main  <- readxl::read_xlsx(inFile2$datapath ,sheet = 1, col_names = FALSE) 
         colnames(main) <-  c('Name','ID')
         main$ID<-as.numeric(main$ID)
-        
+        ## filling absent data
         main[main$ID==9701 & !(is.na(main$ID)),'Name']  <- "Ձեռքով արված նկար"
         main[main$ID==9702 & !(is.na(main$ID)),'Name']  <- "Փորագրանկարի, Էստամպի, վինատպության բնօրինակներ"
         main[main$ID==9704 & !(is.na(main$ID)),'Name']  <- "Քանդակների, արձանիկների բնօրինակներ	"
@@ -162,6 +202,10 @@ runApp(
         main[main$ID==9705 & !(is.na(main$ID)),'Name']  <- "Հնաոճ իրեր 100ից ավելի տարիքով"
         return (main)
       }
+      ### get main ends here
+      
+      
+      ## Get Columns function 3
       get_columns <- function(df,exp_imp){
         if (exp_imp=="Արտահանում"){
           return(df[,c("Name","ID",grep('Export', colnames(df), value=TRUE))])
@@ -171,6 +215,12 @@ runApp(
         }
         
       }
+      
+      ### get columns function 4
+      
+      
+      ## tremester periods function 5
+      
       tremester_periods <- function(df, quart){
         if (quart=="Առաջին"){
           df1 <- df[df$Period %in% c(1,2,3),]
@@ -186,6 +236,10 @@ runApp(
         }
         return (df1)
       }
+      # function 5 ends here
+      
+      
+      # returns the names of the second data
       choice <- reactive({
         inFile2 <- input$file2
         
@@ -196,35 +250,60 @@ runApp(
         return (choices)
       })
       
+      
+      my_data2 <- reactive({
+        
+        main <- get_main()
+        
+        main$group = 0
+        group = 0
+        for (i in c(1:1244)) {
+          if (is.na(main$ID[i])) {
+            group = 1 + group
+            
+          }
+          main$group[i] = group
+        }
+        return(main)
+      })
+      
+      # MY DATA
       my_data <- reactive({
         
         inFile1 <- input$file1
         
         if (is.null(inFile1))
           return(NULL)
-        inFile2 <- input$file2
+        inFile2 <- input$file2 ### check what hapens here
         
         if (is.null(inFile2))
           return(NULL)
+        
+        # I have no idea how this works
         df  <- readxl::read_xlsx(inFile1$datapath, sheet = "Armstat", col_names = TRUE) #Reading the file
         colnames(df) <- c('Name','ID','Year','Period','Export_in_tonnas',
                           'Export','Import_in_tonnas','Import')
         
+        # Turn all into numeric
         df[,2:8] <- apply(df[,2:8],2,as.numeric)
+        
         df$Export <- df$Export/1000
         df$Import <- df$Import/1000
+        
         #Reading the main file
         main <- get_main()
         ###
         
-
+        ## IF Yearly
         if(input$tabs=="Տարեկան"){
         
-        
+        #delte the month
         df$Period <- NULL
         agg1 <- df
+        # get the year
         years <- as.numeric(input$year)
         fin_y <- main
+        
         for (year in years){
           temp <- year_agg(agg1, year,main)
           fin_y <- inner_join(fin_y, temp, by = c("Name","ID"))
@@ -233,6 +312,9 @@ runApp(
         fin_y1 <- get_columns(fin_y,input$Expimp)
         return (fin_y1)
         }
+        
+        
+        ## If monthly
         else if(input$tabs=="Ամսեկան"){
           month_per <- data.frame(Month = c("Հունվար","Փետրվար","Մարտ","Ապրիլ","Մայիս","Հունիս","Հուլիս"
                                             ,"Օգոստոս","Սեպտեմբեր",
@@ -265,6 +347,8 @@ runApp(
           }
           
         }
+        
+        ## if quartly
         else if(input$tabs=="Եռամսյակային"){
           agg1 <- tremester_periods(df, input$three)
           agg1$Period<-NULL
@@ -279,7 +363,11 @@ runApp(
           
         }
       })
+      #MY DATA ends here
       
+      
+      
+      # AGG DATA
       agg_data <- reactive({
         df <- my_data()
         if (input$code == ""){
@@ -302,6 +390,11 @@ runApp(
         }
         
       })
+      ## AGG DATA ends here
+      
+      
+      # Plot data
+      
       plot_data <- reactive({
         inFile1 <- input$file1
         
@@ -387,12 +480,24 @@ runApp(
         final <- final[,-c(8:12)]
         return (final)
       })
+      ## Plot data ends here
+      
+      
+      ## Observe 1
       observe({
-        updateSelectizeInput(session,"names_p", choices=choice())
+        updateSelectizeInput(session,"names_p", choices=choice()) # choice = get_main$Name
       })
+      
+      
+      ## Observe event
       observeEvent(
         eventExpr = input[["submit_loc"]],
         handlerExpr = {
+          
+          output$table2 <- renderDataTable({
+            my_data2();
+          })
+          
           if (input$first_ch=="Որոնում"){
           output$table <- renderDataTable({
             
@@ -414,12 +519,14 @@ runApp(
                   geom_line(aes(x=temp[,2],y=temp[,1])) + 
                   scale_x_discrete(name ="Year",limits=c(2007:2017)) + labs(title=input$names_p)+
                   ylab(as.character(input$variables_p))
-              }
-              
-            })
-          }
-            
-           })
+                             }
+                          })
+                     }
+              }) 
+      
+      ## Observe event ends here
+      
+      
       
       output$downloadData <- downloadHandler(
         filename = function() {
@@ -429,8 +536,7 @@ runApp(
           write_xlsx(agg_data(), file)
         }
       )
+      # output ends here
       
     })
   ))
-
-
