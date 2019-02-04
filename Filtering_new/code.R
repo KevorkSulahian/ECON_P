@@ -41,9 +41,7 @@ runApp(
                                                   
                                                   
                                                   selectInput(inputId = "year",label="Ընտրել տարին",
-                                                              choices= c("2007","2008","2009","2010","2011",
-                                                                         "2012","2013","2014","2015",
-                                                                         "2016","2017","2018"),multiple = TRUE)
+                                                              choices= c("2017","2018"),multiple = TRUE)
                                                   
                                                   
                                                   
@@ -53,7 +51,7 @@ runApp(
                                                   selectInput(inputId =  "Monthly", label = "Ընտրեք ներկայացման տեսակը",
                                                               choices =c("Գումարային","Ամեն ամսյա")),
                                                   selectInput(inputId = "year_m",label="Ընտրել տարին",
-                                                              choices= c("2007","2008","2009","2010","2011", "2012","2013","2014","2015", "2016","2017","2018")
+                                                              choices= c("2017","2018")
                                                               ,multiple = TRUE),
                                                   selectInput(inputId = "month_m", label = "Ընտրել Ամիսը",
                                                               choices = c("Հունվար","Փետրվար","Մարտ","Ապրիլ","Մայիս","Հունիս","Հուլիս"
@@ -66,9 +64,7 @@ runApp(
                                          tabPanel("Եռամսյակային", fluid = F, 
                                                   
                                                   selectInput(inputId = "year_t",label="Ընտրել տարին",
-                                                              choices= c("2007","2008","2009","2010","2011",
-                                                                         "2012","2013","2014","2015",
-                                                                         "2016","2017","2018"),multiple = TRUE),
+                                                              choices= c("2017","2018"),multiple = TRUE),
                                                   selectInput(inputId = "three",label="Ընտրել եռամսյակ",
                                                               choices= c("Առաջին","Երկրորդ","Երրորդ","Չորրորդ"))
                                                   
@@ -152,6 +148,13 @@ runApp(
           new_data3$ID <- as.numeric(new_data3$ID)
           new_data3$ID <- as.character(new_data3$ID)
           new_data3[is.na(new_data3)] <- 0
+          
+          new_data3$export_price <- as.numeric(new_data3$export_price)
+          new_data3$export_price <- new_data3$export_price /482.72
+          
+          new_data3$import_price <- as.numeric(new_data3$import_price)
+          new_data3$import_price <- new_data3$import_price /482.72
+          
           return(new_data3)
         }
         aa <- new_data17()
@@ -194,6 +197,13 @@ runApp(
           new_data3$ID <- as.numeric(new_data3$ID)
           new_data3$ID <- as.character(new_data3$ID)
           new_data3[is.na(new_data3)] <- 0
+          
+          new_data3$export_price <- as.numeric(new_data3$export_price)
+          new_data3$export_price <- new_data3$export_price /482.99
+          
+          new_data3$import_price <- as.numeric(new_data3$import_price)
+          new_data3$import_price <- new_data3$import_price /482.99
+          
           return(new_data3)
         }
         bb <- new_data18()
@@ -636,7 +646,7 @@ runApp(
       # output ends here
       
     })
-        ))
+))
 
 
 
