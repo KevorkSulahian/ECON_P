@@ -17,10 +17,10 @@ runApp(
           tags$style(HTML(
             '
             #tabs {display: grid;
-                  text-align: center;}
+            text-align: center;}
             '
           ))
-        ),
+          ),
         fileInput('file1', 'Հիմնական դատան',
                   accept = c(".xlsx")),
         fileInput('file2', 'Բոլոր կոդերով դատան',
@@ -28,79 +28,79 @@ runApp(
         
         
         tabsetPanel(id = 'first_ch',
-          
-        tabPanel("Որոնում", fluid=TRUE,
-        selectInput(inputId = "Expimp",label="Ներմուծում թե Արտահանում",
-                    choices= c("Արտահանում","Ներմուծում")),
+                    
+                    tabPanel("Որոնում", fluid=TRUE,
+                             selectInput(inputId = "Expimp",label="Ներմուծում թե Արտահանում",
+                                         choices= c("Արտահանում","Ներմուծում")),
+                             
+                             tabsetPanel(id = "tabs",
+                                         
+                                         tabPanel("Տարեկան", fluid = F,
+                                                  
+                                                  
+                                                  selectInput(inputId = "year",label="Ընտրել տարին",
+                                                              choices= c("2007","2008","2009","2010","2011",
+                                                                         "2012","2013","2014","2015",
+                                                                         "2016","2017","2018"),multiple = TRUE)
+                                                  
+                                                  
+                                                  
+                                                  
+                                         ),
+                                         tabPanel("Ամսեկան", fluid = F,
+                                                  selectInput(inputId =  "Monthly", label = "Ընտրեք ներկայացման տեսակը",
+                                                              choices =c("Գումարային","Ամեն ամսյա")),
+                                                  selectInput(inputId = "year_m",label="Ընտրել տարին",
+                                                              choices= c("2007","2008","2009","2010","2011", "2012","2013","2014","2015", "2016","2017","2018")
+                                                              ,multiple = TRUE),
+                                                  selectInput(inputId = "month_m", label = "Ընտրել Ամիսը",
+                                                              choices = c("Հունվար","Փետրվար","Մարտ","Ապրիլ","Մայիս","Հունիս","Հուլիս"
+                                                                          ,"Օգոստոս","Սեպտեմբեր",
+                                                                          "Հոկտեմբեր","Նոյեմբեր","Դեկտեմբեր"),multiple = TRUE)
+                                                  # textInput(inputId = "code_m", label = "Ընտրել ապրանքի կոդը")
+                                                  
+                                                  
+                                         ),
+                                         tabPanel("Եռամսյակային", fluid = F, 
+                                                  
+                                                  selectInput(inputId = "year_t",label="Ընտրել տարին",
+                                                              choices= c("2007","2008","2009","2010","2011",
+                                                                         "2012","2013","2014","2015",
+                                                                         "2016","2017","2018"),multiple = TRUE),
+                                                  selectInput(inputId = "three",label="Ընտրել եռամսյակ",
+                                                              choices= c("Առաջին","Երկրորդ","Երրորդ","Չորրորդ"))
+                                                  
+                                                  
+                                                  
+                                                  
+                                         ),
+                                         textInput(inputId = "code", label = "Ընտրել ապրանքի կոդը")
+                             )
+                             
+                    ),
+                    tabPanel("Գրաֆիկներ",
+                             selectizeInput("names_p", "Name of product",choices=NULL, options = list(maxItems=1)),
+                             selectInput("variables_p", "Choose variable", choices = c("Export_in_tonnas",
+                                                                                       "Export","Import_in_tonnas","Import")))),
+        actionButton(
+          inputId = "submit_loc",
+          label = "Submit"
+        ),
         
-        tabsetPanel(id = "tabs",
-          
-          tabPanel("Տարեկան", fluid = F,
-                   
-                   
-                   selectInput(inputId = "year",label="Ընտրել տարին",
-                               choices= c("2007","2008","2009","2010","2011",
-                                          "2012","2013","2014","2015",
-                                          "2016","2017","2018"),multiple = TRUE)
-                   
-                   
-                   
-                   
-          ),
-          tabPanel("Ամսեկան", fluid = F,
-                   selectInput(inputId =  "Monthly", label = "Ընտրեք ներկայացման տեսակը",
-                               choices =c("Գումարային","Ամեն ամսյա")),
-                   selectInput(inputId = "year_m",label="Ընտրել տարին",
-                               choices= c("2007","2008","2009","2010","2011", "2012","2013","2014","2015", "2016","2017","2018")
-                               ,multiple = TRUE),
-                   selectInput(inputId = "month_m", label = "Ընտրել Ամիսը",
-                               choices = c("Հունվար","Փետրվար","Մարտ","Ապրիլ","Մայիս","Հունիս","Հուլիս"
-                                           ,"Օգոստոս","Սեպտեմբեր",
-                                                  "Հոկտեմբեր","Նոյեմբեր","Դեկտեմբեր"),multiple = TRUE)
-                   # textInput(inputId = "code_m", label = "Ընտրել ապրանքի կոդը")
-                   
-                   
-          ),
-          tabPanel("Եռամսյակային", fluid = F, 
-                   
-                   selectInput(inputId = "year_t",label="Ընտրել տարին",
-                               choices= c("2007","2008","2009","2010","2011",
-                                          "2012","2013","2014","2015",
-                                          "2016","2017","2018"),multiple = TRUE),
-                   selectInput(inputId = "three",label="Ընտրել եռամսյակ",
-                               choices= c("Առաջին","Երկրորդ","Երրորդ","Չորրորդ"))
-                   
-                   
-                   
-                   
-          ),
-          textInput(inputId = "code", label = "Ընտրել ապրանքի կոդը")
-        )
-        
-      ),
-      tabPanel("Գրաֆիկներ",
-               selectizeInput("names_p", "Name of product",choices=NULL, options = list(maxItems=1)),
-               selectInput("variables_p", "Choose variable", choices = c("Export_in_tonnas",
-                                                                         "Export","Import_in_tonnas","Import")))),
-      actionButton(
-        inputId = "submit_loc",
-        label = "Submit"
-      ),
-      
-      br(),
-      br(),
-      downloadButton("downloadData", "Download",class="butt1")),
+        br(),
+        br(),
+        downloadButton("downloadData", "Download",class="butt1")),
       
       dashboardBody(
         tabsetPanel(id = "page2",
                     tabPanel("tab1",
                              dataTableOutput("table"),
                              plotOutput("plot1")
-                             ),
+                    ),
                     tabPanel("tab2",
                              dataTableOutput("table2")
                     )
-                    )
+        )
         # fluidRow(
         # tags$hr(),
         
@@ -296,21 +296,21 @@ runApp(
         
         ## IF Yearly
         if(input$tabs=="Տարեկան"){
-        
-        #delte the month
-        df$Period <- NULL
-        agg1 <- df
-        # get the year
-        years <- as.numeric(input$year)
-        fin_y <- main
-        
-        for (year in years){
-          temp <- year_agg(agg1, year,main)
-          fin_y <- inner_join(fin_y, temp, by = c("Name","ID"))
-        }
-        
-        fin_y1 <- get_columns(fin_y,input$Expimp)
-        return (fin_y1)
+          
+          #delte the month
+          df$Period <- NULL
+          agg1 <- df
+          # get the year
+          years <- as.numeric(input$year)
+          fin_y <- main
+          
+          for (year in years){
+            temp <- year_agg(agg1, year,main)
+            fin_y <- inner_join(fin_y, temp, by = c("Name","ID"))
+          }
+          
+          fin_y1 <- get_columns(fin_y,input$Expimp)
+          return (fin_y1)
         }
         
         
@@ -322,18 +322,18 @@ runApp(
                                   Period = rep(1:12))
           
           if (input$Monthly == "Գումարային"){
-          
-          per <- month_per[month_per$Month==input$month_m,"Period"]
-          agg1 <- df[df$Period <= per,]
-          years <- as.numeric(input$year_m)
-          agg1$Period <- NULL
-          fin_m <- main
-          for (year in years){
-            temp <- year_agg(agg1, year,main)
-            fin_m <- inner_join(fin_m, temp, by = c("Name","ID"))
-          }
-          fin_m1 <- get_columns(fin_m,input$Expimp)
-          return (fin_m1)
+            
+            per <- month_per[month_per$Month==input$month_m,"Period"]
+            agg1 <- df[df$Period <= per,]
+            years <- as.numeric(input$year_m)
+            agg1$Period <- NULL
+            fin_m <- main
+            for (year in years){
+              temp <- year_agg(agg1, year,main)
+              fin_m <- inner_join(fin_m, temp, by = c("Name","ID"))
+            }
+            fin_m1 <- get_columns(fin_m,input$Expimp)
+            return (fin_m1)
           }
           if (input$Monthly == "Ամեն ամսյա"){
             
@@ -499,9 +499,9 @@ runApp(
           })
           
           if (input$first_ch=="Որոնում"){
-          output$table <- renderDataTable({
-            
-            agg_data();
+            output$table <- renderDataTable({
+              
+              agg_data();
             })}
           else if (input$first_ch == "Գրաֆիկներ"){
             
@@ -519,10 +519,10 @@ runApp(
                   geom_line(aes(x=temp[,2],y=temp[,1])) + 
                   scale_x_discrete(name ="Year",limits=c(2007:2017)) + labs(title=input$names_p)+
                   ylab(as.character(input$variables_p))
-                             }
-                          })
-                     }
-              }) 
+              }
+            })
+          }
+        }) 
       
       ## Observe event ends here
       
@@ -539,4 +539,7 @@ runApp(
       # output ends here
       
     })
-  ))
+    
+        ))
+
+
