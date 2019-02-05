@@ -19,7 +19,7 @@ runApp(
                                     choices= "waiting for data",multiple = TRUE),
                         selectInput(inputId = "Expimp",label="Select type of output",
                                     choices= c("Export","Import", "All", "Decomposition","Import Decomposition")),
-                       
+                        
                         actionButton(
                           inputId = "submit_loc",
                           label = "Submit"
@@ -28,7 +28,7 @@ runApp(
                         br(),
                         downloadButton("downloadData", "Download",class="butt1")
                         # tags$head(tags$style(".butt1{background-color:blue;} .butt1{color: black;} .butt1{font-family: Courier New} ,butt1{align: center}"))
-                        ),
+      ),
       
       dashboardBody(
         # fluidRow(
@@ -39,19 +39,16 @@ runApp(
       ))
     ,
     server = shinyServer(function(input, output,session) {
-      
-      
       choice <- reactive({
         inFile1 <- input$file1
         if (is.null(inFile1))
           return(NULL)
-        df  <- readxl::read_xlsx(inFile1$datapath, sheet = "Armstat", col_names = TRUE) #Reading the file
+        df  <- readxl::read_xlsx(inFile1$datapath, col_names = TRUE) #Reading the file
         colnames(df) <- c('Name','ID','Year','Period','Export_in_tonnas',
                           'Export','Import_in_tonnas','Import')
         choices <- unique(df$Year)
         return (choices)
       })
-      
       
       my_data <- reactive({
         
@@ -63,7 +60,7 @@ runApp(
         
         if (is.null(inFile2))
           return(NULL)
-        df  <- readxl::read_xlsx(inFile1$datapath, sheet = "Armstat", col_names = TRUE) #Reading the file
+        df  <- readxl::read_xlsx(inFile1$datapath, col_names = TRUE) #Reading the file
         colnames(df) <- c('Name','ID','Year','Period','Export_in_tonnas',
                           'Export','Import_in_tonnas','Import')
         choices <- unique(df$Year)
@@ -99,14 +96,14 @@ runApp(
           counter <- 0
           for (i in c(1:nrow(polufinal_Year_1))){
             polufinal_Year_1[i,'Group'] = counter
-
+            
             if (is.na(polufinal_Year_1[i,'ID'])){
               counter = counter +1
             }
           }
           polufinal_Year_1[is.na(polufinal_Year_1$ID),'Group']<- NA
           polufinal_Year_1[3:6][is.na(polufinal_Year_1[3:6])] <- 0
-
+          
           agg_total_Year <-polufinal_Year_1 %>%
             group_by(Group)  %>%
             summarise(Total_Export_in_tonnas = sum(Export_in_tonnas),
@@ -114,19 +111,19 @@ runApp(
                       Total_Import_in_tonnas = sum(Import_in_tonnas),
                       Total_Import = sum(Import))
           agg_total_Year <- agg_total_Year[complete.cases(agg_total_Year), ]
-
+          
           polufinal_Year_2 <- left_join(titles, agg_total_Year, by = "Group")
           polufinal_Year_2['Group'] <- NULL
           final_Year <- left_join(polufinal_Year_1,polufinal_Year_2, by = "Name")
-
+          
           for (i in c(1:nrow(final_Year))){
             if (is.na(final_Year[i,'ID'])){
               final_Year[i,3:6] <- final_Year[i,9:12]
             }
           }
           final_Year <- final_Year[,-c(8:12)]
-
-
+          
+          
           return (final_Year)
         }
         
@@ -137,7 +134,6 @@ runApp(
                                    by = c("Name","ID"),  suffix = c(paste0(".",years[1]), paste0(".",years[2])))
         first_output[,'Year.2017'] <- NULL
         first_output[,'Year.2018'] <- NULL
-        
         if (input$Expimp == "All") {
           all <- inner_join(final_year1, final_year2, by = c("Name","ID"),  suffix = c(paste0(".",years[1]), paste0(".",years[2])))
           all[,paste0("Year.",years[1])] <- NULL
@@ -145,7 +141,7 @@ runApp(
           all <- rbind(c("Ընդամենը","",colSums(all[is.na(all$ID),c(3:10)]),"-"),all)
           return (all)
         }
-
+        
         if (input$Expimp=="Decomposition"){
           dec1 <- first_output[first_output$ID %in% c(2603,2402,7108,2208,7607,7202,7102,7402),]
           dec1$price_growth <- dec1$Export.2018 - dec1$Export.2017                                            
@@ -186,9 +182,8 @@ runApp(
           return (imp2)
         }
         
-
         join_and_output <- function(df1, df2, exp_imp){
-
+          
           final <- inner_join(df1, df2, by = c("Name","ID"),  suffix = c(".2017", ".2018"))
           if(exp_imp == "Export"){
             final$Abs_Growth <- final$Export.2018 - final$Export.2017
@@ -198,8 +193,8 @@ runApp(
             final$Abs_Growth <- final$Import.2018 - final$Import.2017
             final$Pct_Growth <- final$Abs_Growth * 100 / final$Import.2017
           }
-
-
+          
+          
           groups <- final[is.na(final$ID),c(1,13)]
           groups_sort <- groups[order(groups$Abs_Growth),]
           groups_sort['ord']<-order(groups_sort$Abs_Growth)
@@ -254,43 +249,34 @@ runApp(
           final <- final[,c("Name","ID",paste0(exp_imp,".2018"),paste0(exp_imp,".2017"),"Abs_Growth","Pct_Growth")]
           final <- final[final[,3]>0 & final[,4] >0,]
           final <- rbind(c("Ընդամենը","",colSums(final[is.na(final$ID),c(3:5)]),"-"),final)
-          final[1,'Pct_Growth'] = as.numeric(final[1,'Abs_Growth']) /as.numeric(final[1,c(4)])
+          final[1,'Pct_Growth'] = as.numeric(final[1,'Abs_Growth']) /as.numeric(final[1,c(4)]) * 100
           return(final)
         }
-
+        
         final <- join_and_output(final_year1,final_year2,input$Expimp)
-
-
-
-
+        
+        
+        
+        
         return (final)
         
       })
-      
-      
       output$txt <- renderText({
         "Instructions:"
       })
-      
-      
       observe({
         updateSelectInput(session,"year",choices=choice())
       })
-      
-      
       observeEvent(
         eventExpr = input[["submit_loc"]],
         handlerExpr = {
           
           output$table <- renderDataTable({
-          my_data()
-      }) })
-      
-      
-      
+            my_data()
+          }) })
       output$downloadData <- downloadHandler(
         filename = function() {
-            ("untitled.xlsx")
+          ("untitled.xlsx")
         },
         content = function(file) {
           write_xlsx(my_data(), file)
@@ -299,4 +285,3 @@ runApp(
       
     })
   ))
-
