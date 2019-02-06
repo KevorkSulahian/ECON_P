@@ -2,7 +2,6 @@ library(shiny)
 library(stringr)
 library(utf8)
 library(ggplot2)
-
 library(shinyjs)
 library(shinydashboard)
 library(rsconnect)
@@ -72,17 +71,17 @@ runApp(
                      size=ifelse(df$Growth<0,1,0)) +
             geom_text(aes(label=ifelse(df$Growth<0,paste0(Price," (↓)"),paste0(Price," (↑)")),
                           y=ifelse(df$Growth<0, Price-Growth, Price)),hjust= -0.5, color= ifelse(df$Growth<0,"Red","DarkGreen"),
-                          size=5,fontface="bold")+
-            # scale_y_continuous(breaks = seq(0,max(df$Price)+50,50), limits = c(0, max(df$Price)+50))+
+                          size=10,fontface="bold")+
+            scale_y_continuous(breaks = seq(0,max(df$Price)+100,50), limits = c(0, max(df$Price)+100))+
             theme_minimal() +
             theme(
               plot.title = element_blank(),
               axis.title.x = element_blank(),
               axis.title.y = element_blank(),
-              axis.text.y = element_text(size=18,face="bold"),
-              axis.text.x = element_text(size=12,face="bold"))  +
+              axis.text.y = element_text(size=26,face="bold"),
+              axis.text.x = element_text(size=22,face="bold"))  +
             coord_flip()
-          ggsave("export.png", width = 33, height = 15, dpi = 250)
+          ggsave("export.png", width = 40, height = 15, dpi = 250, units = "in")
           
           # return(here)
           dev.off()
@@ -97,18 +96,19 @@ runApp(
             geom_bar(aes(y=(df$Price - df$Growth)),stat="identity", fill="#16D1CC",alpha=0.25 ,
                      size=ifelse(df$Growth<0,1,0)) +
             geom_text(aes(label=ifelse(df$Growth<0,paste0(Price," (↓)"),paste0(Price," (↑)")),
-                          y=ifelse(df$Growth<0, Price-Growth, Price)),hjust= -0.5, color= ifelse(df$Growth<0,"Red","#186866"), size=5,fontface = "bold")+
-            # scale_y_continuous(breaks = seq(0,max(df$Price)+50,50), limits = c(0, max(df$Price)+50))+
+                          y=ifelse(df$Growth<0, Price-Growth, Price)),hjust= -0.5, color= ifelse(df$Growth<0,"Red","#186866"),
+                          size=10,fontface = "bold")+
+            scale_y_continuous(breaks = seq(0,max(df$Price)+100,50), limits = c(0, max(df$Price)+100))+
             theme_minimal() +
             theme(
               plot.title = element_blank(),
               axis.title.x = element_blank(),
               axis.title.y = element_blank(),
-              axis.text.y = element_text(size=18,face="bold"),
-              axis.text.x = element_text(size=12,face="bold"))  +
+              axis.text.y = element_text(size=26,face="bold"),
+              axis.text.x = element_text(size=22,face="bold"))  +
             coord_flip()
           
-          ggsave("import.png", width = 33, height = 15, dpi = 250)
+          ggsave("import.png", width = 40, height = 15, dpi = 250, units = "in")
           # return(here2)
           dev.off()
         }
