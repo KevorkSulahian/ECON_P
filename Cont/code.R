@@ -71,4 +71,8 @@ d$x <- x
 d$y <- z2
 library(ggplot2)
 
+png("here2.png", units="px", width=800, height=800, res=300)
+
 ggplot(d, aes(x, y)) + geom_point()
+dev.off()
+

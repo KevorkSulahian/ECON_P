@@ -1,15 +1,11 @@
-#!diagnostics off
-
 library(stringr)
 library(utf8)
 library(ggplot2)
 library(shiny)
-# library(shinyjs)
 library(shinydashboard)
 library(rsconnect)
 library(dplyr)
 library(writexl)
-options(shiny.maxRequestSize=30*1024^2) 
 
 runApp(
   list(
@@ -22,7 +18,8 @@ runApp(
                         selectInput(inputId = "year",label="Choose year",
                                     choices= "waiting for data",multiple = TRUE),
                         selectInput(inputId = "Expimp",label="Select type of output",
-                                    choices= c("All")),
+                                    # choices= c("Export","Import", "All", "Decomposition","Import Decomposition")),
+                                    choices = c("All")),
                         
                         actionButton(
                           inputId = "submit_loc",
@@ -44,11 +41,14 @@ runApp(
     ,
     server = shinyServer(function(input, output,session) {
       
+      
+      # new thing
+      
       full_data <- function() {
         new_data17 <- function() {
           
           # new_data <- readxl::read_xls(inFile1$datapath, sheet = 1, col_names = TRUE)
-          new_data <- readxl::read_xls("new.xls", sheet = 1, col_names = TRUE)
+          new_data <- readxl::read_xlsx("new.xlsx", sheet = 1, col_names = TRUE)
           
           new_data <- new_data[-c(1:7),]
           new_data <- new_data[,-1]
@@ -56,7 +56,7 @@ runApp(
           
           
           # new_data2 <- readxl::read_xls(inFile1$datapath, sheet = 2, col_names = TRUE)
-          new_data2 <- readxl::read_xls("new.xls", sheet = 2, col_names = TRUE)
+          new_data2 <- readxl::read_xlsx("new.xlsx", sheet = 2, col_names = TRUE)
           
           new_data2 <- new_data2[-c(1:7),]
           new_data2 <- new_data2[,-1]
@@ -84,6 +84,7 @@ runApp(
           new_data3$ID <- as.character(new_data3$ID)
           new_data3[is.na(new_data3)] <- 0
           new_data3 <-new_data3[-grep("^93", new_data3$ID),]
+          new_data3$ID <- as.numeric(new_data3$ID)
           
           new_data3$export_price <- as.numeric(new_data3$export_price)
           new_data3$export_price <- new_data3$export_price /482.72
@@ -98,7 +99,7 @@ runApp(
         new_data18 <- function() {
           
           # new_data <- readxl::read_xls(inFile1$datapath, sheet = 6, col_names = TRUE)
-          new_data <- readxl::read_xls("new.xls", sheet = 5, col_names = TRUE)
+          new_data <- readxl::read_xlsx("new.xlsx", sheet = 5, col_names = TRUE)
           
           new_data <- new_data[-c(1:8),]
           new_data <- new_data[,-1]
@@ -106,7 +107,7 @@ runApp(
           
           
           # new_data2 <- readxl::read_xls(inFile1$datapath, sheet = 5, col_names = TRUE)
-          new_data2 <- readxl::read_xls("new.xls", sheet = 6, col_names = TRUE)
+          new_data2 <- readxl::read_xlsx("new.xlsx", sheet = 6, col_names = TRUE)
           
           new_data2 <- new_data2[-c(1:8),]
           new_data2 <- new_data2[,-1]
@@ -134,7 +135,7 @@ runApp(
           new_data3$ID <- as.character(new_data3$ID)
           new_data3[is.na(new_data3)] <- 0
           new_data3 <-new_data3[-grep("^93", new_data3$ID),]
-          
+          new_data3$ID <- as.numeric(new_data3$ID)
           new_data3$export_price <- as.numeric(new_data3$export_price)
           new_data3$export_price <- new_data3$export_price /482.99
           
@@ -150,18 +151,21 @@ runApp(
       }
       
       
+      
+      
+      
+      
+      
       choice <- reactive({
         inFile1 <- input$file1
         if (is.null(inFile1))
           return(NULL)
-        # df  <- readxl::read_xlsx(inFile1$datapath, sheet = "Armstat", col_names = TRUE) #Reading the file
         df <- full_data()
         colnames(df) <- c('Name','ID','Year','Period','Export_in_tonnas',
                           'Export','Import_in_tonnas','Import')
         choices <- unique(df$Year)
         return (choices)
       })
-      
       
       my_data <- reactive({
         
@@ -173,15 +177,14 @@ runApp(
         
         if (is.null(inFile2))
           return(NULL)
-        # df  <- readxl::read_xlsx(inFile1$datapath, sheet = "Armstat", col_names = TRUE) #Reading the file
         df <- full_data()
         colnames(df) <- c('Name','ID','Year','Period','Export_in_tonnas',
                           'Export','Import_in_tonnas','Import')
         choices <- unique(df$Year)
         df$Period <- NULL
         df[,2:7] <- apply(df[,2:7],2,as.numeric)
-        # df$Export <- df$Export/1000
-        # df$Import <- df$Import/1000
+        df$Export <- df$Export/1000
+        df$Import <- df$Import/1000
         #Reading the main file
         main  <- readxl::read_xlsx(inFile2$datapath, sheet = "Sheet1", col_names = FALSE) 
         colnames(main) <-  c('Name','ID')
@@ -248,15 +251,13 @@ runApp(
                                    by = c("Name","ID"),  suffix = c(paste0(".",years[1]), paste0(".",years[2])))
         first_output[,'Year.2017'] <- NULL
         first_output[,'Year.2018'] <- NULL
-        
         if (input$Expimp == "All") {
           all <- inner_join(final_year1, final_year2, by = c("Name","ID"),  suffix = c(paste0(".",years[1]), paste0(".",years[2])))
           all[,paste0("Year.",years[1])] <- NULL
           all[,paste0("Year.",years[2])] <- NULL
           all <- rbind(c("Ընդամենը","",colSums(all[is.na(all$ID),c(3:10)]),"-"),all)
-          all <- all[,c(1,2,4,6,8,10)]
-          colnames(all) <- c("Name", "ID", "import_2017", "export_2017","import_2018", "export_2018")
-          return (all)
+          
+          return (all[,c(1,2,4,6,8,10)])
         }
         
         if (input$Expimp=="Decomposition"){
@@ -299,7 +300,6 @@ runApp(
           return (imp2)
         }
         
-        
         join_and_output <- function(df1, df2, exp_imp){
           
           final <- inner_join(df1, df2, by = c("Name","ID"),  suffix = c(".2017", ".2018"))
@@ -313,7 +313,7 @@ runApp(
           }
           
           
-          groups <- final[is.na(final$ID),c(1,12)]
+          groups <- final[is.na(final$ID),c(1,13)]
           groups_sort <- groups[order(groups$Abs_Growth),]
           groups_sort['ord']<-order(groups_sort$Abs_Growth)
           final <- left_join(final,groups_sort[,c(1,3)],by="Name")
@@ -367,7 +367,7 @@ runApp(
           final <- final[,c("Name","ID",paste0(exp_imp,".2018"),paste0(exp_imp,".2017"),"Abs_Growth","Pct_Growth")]
           final <- final[final[,3]>0 & final[,4] >0,]
           final <- rbind(c("Ընդամենը","",colSums(final[is.na(final$ID),c(3:5)]),"-"),final)
-          final[1,'Pct_Growth'] = as.numeric(final[1,'Abs_Growth']) /as.numeric(final[1,c(4)])
+          final[1,'Pct_Growth'] = as.numeric(final[1,'Abs_Growth']) /as.numeric(final[1,c(4)]) * 100
           return(final)
         }
         
@@ -379,18 +379,12 @@ runApp(
         return (final)
         
       })
-      
-      
       output$txt <- renderText({
         "Instructions:"
       })
-      
-      
       observe({
         updateSelectInput(session,"year",choices=choice())
       })
-      
-      
       observeEvent(
         eventExpr = input[["submit_loc"]],
         handlerExpr = {
@@ -398,9 +392,6 @@ runApp(
           output$table <- renderDataTable({
             my_data()
           }) })
-      
-      
-      
       output$downloadData <- downloadHandler(
         filename = function() {
           ("untitled.xlsx")
@@ -412,10 +403,3 @@ runApp(
       
     })
   ))
-
-
-
-
-
-
-
