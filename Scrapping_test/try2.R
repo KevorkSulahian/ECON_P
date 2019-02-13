@@ -157,7 +157,7 @@ first_website <- function() {
 
 data <- first_website()
 
-writexl::write_xlsx(data, "data.xlsx")
+writexl::write_xlsx(data, "jobfinder.xlsx")
 
   
 
