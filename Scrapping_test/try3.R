@@ -38,7 +38,7 @@ gets <- function(url_number) {
       unlist()
   }
   # test
-  # get_company(read_html(links[1]))
+   # get_company(read_html(links[1]))
   
   get_employment_type <- function(html) {
     html %>%
@@ -83,12 +83,17 @@ gets <- function(url_number) {
       str_replace_all("Deadline: ","") %>%
       str_replace_all("\n"," ")
   }
-  get_closed_date(read_html(links[1]))
+  # get_closed_date(read_html(links[1]))
   
-  
+  get_description <- function(html) {
+    html %>%
+      html_node(xpath = '//*[@id="job-post"]/div[2]') %>%
+      html_text() 
+  }
+  # get_description(read_html(links[1]))
   
   data <- data.frame(title = character(), company = character(), employment_type = character(),
-                     category = character(), location = character(), close_date = character())
+                     category = character(), location = character(), close_date = character(), description = character())
   
   get_info <- function(links) {
     for (link in links) {
@@ -98,7 +103,7 @@ gets <- function(url_number) {
       
       temp <- data.frame(title = get_title(link), company = get_company(link), 
                          emplyment_type = get_employment_type(link), category =  get_category(link),
-                         location = get_location(link), closed_date = get_closed_date(link))
+                         location = get_location(link), closed_date = get_closed_date(link), description = get_description(link))
       
       data <- rbind(data,temp)
       
@@ -119,6 +124,6 @@ multiple_gets <- function(number){
   return(data)
 }
 
-scraped_data <- multiple_gets(10)
+scraped_data <- multiple_gets(5)
 scraped_data <- distinct(scraped_data)
 writexl::write_xlsx(data, "staff.xlsx")

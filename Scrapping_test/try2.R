@@ -159,17 +159,3 @@ data <- first_website()
 
 writexl::write_xlsx(data, "jobfinder.xlsx")
 
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
