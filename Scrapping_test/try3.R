@@ -126,4 +126,4 @@ multiple_gets <- function(number){
 
 scraped_data <- multiple_gets(5)
 scraped_data <- distinct(scraped_data)
-writexl::write_xlsx(data, "staff.xlsx")
+writexl::write_xlsx(scraped_data, "staff.xlsx")

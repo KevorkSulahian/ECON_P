@@ -161,18 +161,11 @@ group$Country <- as.character(group$Country)
 group$Country[group$Country == "Iran"] <- "Iran, Islamic Rep."
 group2 <- group
 group <- group[group$group %in% group$group[group$Country %in% "Armenia"],]
+
+
 ## BIG BOI FUNCTIONS
 
-# A <- data18AM %>%
-#   filter(grepl("^A", data18AM$`Code GCR`))
-# 
-# 
-# B <- data18AM %>%
-#   filter(grepl("^B",data18AM$`Code GCR`))
-# 
-# C <- data18AM %>%
-#   filter(grepl("^C", data18AM$`Code GCR`))
-# 
+
 # Pillar calculators
 calculate_A <- function(data) {
   temp <- data %>%
@@ -230,6 +223,7 @@ get_number <- function(id, country) {
     select(country)
   return(temp[[1]])
 }
+
 country = temp33
 id = "A.06"
 get_number("A.05", temp33)
