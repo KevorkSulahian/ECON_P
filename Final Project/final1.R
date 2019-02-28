@@ -2,7 +2,6 @@ library(stringr)
 library(utf8)
 library(ggplot2)
 library(shiny)
-# library(shinyjs)
 library(shinydashboard)
 library(rsconnect)
 library(dplyr)
@@ -41,17 +40,17 @@ runApp(
                                                   selectInput(inputId = "year",label="Ընտրել տարին",
                                                               choices= c("2007","2008","2009","2010","2011",
                                                                          "2012","2013","2014","2015",
-                                                                         "2016","2017","2018"),multiple = TRUE)
+                                                                         "2016","2017","2018", "2019"),multiple = TRUE)
                                                   
                                                   
                                                   
                                                   
                                          ),
-                                         tabPanel("Ամսեկան", fluid = F,
+                                         tabPanel("Ամսական", fluid = F,
                                                   selectInput(inputId =  "Monthly", label = "Ընտրեք ներկայացման տեսակը",
                                                               choices =c("Գումարային","Ամեն ամսյա")),
                                                   selectInput(inputId = "year_m",label="Ընտրել տարին",
-                                                              choices= c("2007","2008","2009","2010","2011", "2012","2013","2014","2015", "2016","2017","2018")
+                                                              choices= c("2007","2008","2009","2010","2011", "2012","2013","2014","2015", "2016","2017","2018", "2019")
                                                               ,multiple = TRUE),
                                                   selectInput(inputId = "month_m", label = "Ընտրել Ամիսը",
                                                               choices = c("Հունվար","Փետրվար","Մարտ","Ապրիլ","Մայիս","Հունիս","Հուլիս"
@@ -66,7 +65,7 @@ runApp(
                                                   selectInput(inputId = "year_t",label="Ընտրել տարին",
                                                               choices= c("2007","2008","2009","2010","2011",
                                                                          "2012","2013","2014","2015",
-                                                                         "2016","2017","2018"),multiple = TRUE),
+                                                                         "2016","2017","2018", "2019"),multiple = TRUE),
                                                   selectInput(inputId = "three",label="Ընտրել եռամսյակ",
                                                               choices= c("Առաջին","Երկրորդ","Երրորդ","Չորրորդ"))
                                                   
@@ -280,7 +279,7 @@ runApp(
           return(NULL)
         
         # I have no idea how this works
-        df  <- readxl::read_xlsx(inFile1$datapath, sheet = "Armstat", col_names = TRUE) #Reading the file
+        df  <- readxl::read_xlsx(inFile1$datapath, sheet = 1, col_names = TRUE) #Reading the file
         colnames(df) <- c('Name','ID','Year','Period','Export_in_tonnas',
                           'Export','Import_in_tonnas','Import')
         
@@ -310,12 +309,22 @@ runApp(
           }
           
           fin_y1 <- get_columns(fin_y,input$Expimp)
-          return (fin_y1)
+          empty <- which(is.na(fin_y1$ID))
+          x <- rep(NA, ncol(fin_y1))
+          x[1] <- "All" 
+          x[2] <- 0 
+          x[-c(1,2)]<- c(colSums(fin_y1[empty, -c(1,2)]))
+          x<- t(as.data.frame(x))
+          x[-1]<-lapply(x[-1],as.numeric)
+          x<-as.data.frame(x) #
+          colnames(x) <- c(colnames(fin_y1)) 
+          test <- rbind(x,fin_y1)
+          return (test)
         }
         
         
         ## If monthly
-        else if(input$tabs=="Ամսեկան"){
+        else if(input$tabs=="Ամսական"){
           month_per <- data.frame(Month = c("Հունվար","Փետրվար","Մարտ","Ապրիլ","Մայիս","Հունիս","Հուլիս"
                                             ,"Օգոստոս","Սեպտեմբեր",
                                             "Հոկտեմբեր","Նոյեմբեր","Դեկտեմբեր"),
@@ -333,7 +342,19 @@ runApp(
               fin_m <- inner_join(fin_m, temp, by = c("Name","ID"))
             }
             fin_m1 <- get_columns(fin_m,input$Expimp)
-            return (fin_m1)
+            
+            empty <- which(is.na(fin_m1$ID))
+            x <- rep(NA, ncol(fin_m1))
+            x[1] <- "All" 
+            x[2] <- 0 
+            x[-c(1,2)]<- c(colSums(fin_m1[empty, -c(1,2)]))
+            x<- t(as.data.frame(x))
+            x[-1]<-lapply(x[-1],as.numeric)
+            x<-as.data.frame(x) #
+            colnames(x) <- c(colnames(fin_m1)) 
+            test <- rbind(x,fin_m1)
+            
+            return (test)
           }
           if (input$Monthly == "Ամեն ամսյա"){
             
@@ -359,7 +380,18 @@ runApp(
             fin_t <- inner_join(fin_t, temp, by = c("Name","ID"))
           }
           fin_t1 <- get_columns(fin_t,input$Expimp)
-          return (fin_t1)
+          
+          empty <- which(is.na(fin_t1$ID))
+          x <- rep(NA, ncol(fin_t1))
+          x[1] <- "All" 
+          x[2] <- 0 
+          x[-c(1,2)]<- c(colSums(fin_t1[empty, -c(1,2)]))
+          x<- t(as.data.frame(x))
+          x[-1]<-lapply(x[-1],as.numeric)
+          x<-as.data.frame(x) #
+          colnames(x) <- c(colnames(fin_t1)) 
+          test <- rbind(x,fin_t1)
+          return (test)
           
         }
       })
@@ -424,7 +456,7 @@ runApp(
         main[main$ID==9705 & !(is.na(main$ID)),'Name']  <- "Հնաոճ իրեր 100ից ավելի տարիքով"
         rep_main <- data.frame("Name" = rep(main$Name, 11),"ID"=rep(main$ID, 11))
         rep_main$Year <- 0
-        year_1 <- data.frame("Year"=c(2007:2017), "i"=c(1:11))
+        year_1 <- data.frame("Year"=c(2007:2019), "i"=c(1:11))
         for (i in c(0:10)){
           rep_main$Year[(i *1244): ((i+1)*1244)] <- year_1[i+1,"Year"]
         }
@@ -537,9 +569,7 @@ runApp(
         }
       )
       # output ends here
-      
     })
-    
-        ))
+))
 
 
