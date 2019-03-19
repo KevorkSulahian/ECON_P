@@ -1,4 +1,3 @@
-library(twitteR)
 library(ROAuth)
 library(rtweet)
 
@@ -14,3 +13,9 @@ setup_twitter_oauth(api_key, api_secret, access_token, access_token_secret)
 
 tmls <- get_timelines("SenSanders", n = 30)
 
+tmls$text[1]
+
+writetmls[1,]
+
+writexl::write_xlsx(tmls, "df.xlsx")
+tmls$created_at
