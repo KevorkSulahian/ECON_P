@@ -6,6 +6,7 @@ library(shinydashboard)
 library(rsconnect)
 library(dplyr)
 library(writexl)
+library(tidyr)
 options(shiny.maxRequestSize=30*1024^2) 
 runApp(
   list(

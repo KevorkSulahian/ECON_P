@@ -89,4 +89,15 @@ complete_data <- merge(complete_data,pls4[-2], by = c("id", "year"))
 complete_data <- complete_data[complete.cases(complete_data),]
 
 
+complete_data %>% 
+  gather(variable, value, -(month:student)) %>%
+  unite(temp, student, variable) %>%
+  spread(temp, value)
+
+
+complete_data %>% spread(year, complete_data[-c(1:3)])
+
+
+
+
 
