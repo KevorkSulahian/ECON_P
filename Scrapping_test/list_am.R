@@ -4,9 +4,9 @@ library(stringr)
 library(XML)
 library(tm)
 
-get_links <- function(number) {
+get_links <- function(start, end) {
   links <- NULL
-  for (i in 1:number) {
+  for (i in start:end) {
     url <- paste0("https://www.list.am/category/29/", i)
     html<- read_html(url)
     temp <- html %>%
@@ -64,7 +64,7 @@ get_location <- function(html) {
     unlist()
 }
 #test
-get_location(link)
+# get_location(link)
 
 
 get_open_date <- function(html) {
@@ -109,8 +109,77 @@ get_info <- function(links) {
 
 
 
-links<- get_links(1)
+links<- get_links(1,10)
 links<- unique(links)
 links<- paste0('https://www.list.am/en',links)
 
-final <- get_info(links)
+final1 <- get_info(links)
+
+links<- get_links(10,20)
+links<- unique(links)
+links<- paste0('https://www.list.am/en',links)
+
+final2 <- get_info(links)
+
+links<- get_links(20,30)
+links<- unique(links)
+links<- paste0('https://www.list.am/en',links)
+
+final3 <- get_info(links)
+
+links<- get_links(30,40)
+links<- unique(links)
+links<- paste0('https://www.list.am/en',links)
+
+final4 <- get_info(links)
+
+links<- get_links(40,50)
+links<- unique(links)
+links<- paste0('https://www.list.am/en',links)
+
+final5 <- get_info(links)
+
+links<- get_links(50,60)
+links<- unique(links)
+links<- paste0('https://www.list.am/en',links)
+
+final6 <- get_info(links)
+
+links<- get_links(60,70)
+links<- unique(links)
+links<- paste0('https://www.list.am/en',links)
+
+final7 <- get_info(links)
+
+links<- get_links(70,80)
+links<- unique(links)
+links<- paste0('https://www.list.am/en',links)
+
+final8 <- get_info(links)
+
+links<- get_links(80,90)
+links<- unique(links)
+links<- paste0('https://www.list.am/en',links)
+
+final9 <- get_info(links)
+
+links<- get_links(90,100)
+links<- unique(links)
+links<- paste0('https://www.list.am/en',links)
+
+final10 <- get_info(links)
+
+final <- rbind(final1,final2)
+final <- rbind(final,final3)
+
+final <- rbind(final,final4)
+final <- rbind(final,final5)
+final <- rbind(final,final6)
+final <- rbind(final,final7)
+final <- rbind(final,final8)
+final <- rbind(final,final9)
+final <- rbind(final,final10)
+
+final <- final[!duplicated(final),]
+
+writexl::write_xlsx(final,"list_am.xlsx")
