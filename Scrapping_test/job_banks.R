@@ -130,4 +130,4 @@ get_data <- function() {
   return(final)
 }
 data <- get_data()
-writexl::write_xlsx("job_banks.xlsx")
+writexl::write_xlsx(data,"job_banks.xlsx")
