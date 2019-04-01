@@ -29,7 +29,7 @@ runApp(
         if (is.null(inFile))
           return(NULL)
         df  <- readxl::read_xlsx(inFile$datapath, sheet = 1, col_names = TRUE) #Reading the file
-        # df  <- readxl::read_xlsx("Ex graph.xlsx", sheet = 1, col_names = TRUE) #Reading the file
+        # df  <- readxl::read_xlsx("Import graph.xlsx", sheet = 1, col_names = TRUE) #Reading the file
         colnames(df) <-c("Name", "Price","Growth")
         df$Price <- as.numeric(df$Price)
         df$Growth <- as.numeric(df$Growth)
@@ -69,10 +69,10 @@ runApp(
             geom_bar(aes(y=df$Price),stat="identity", fill='#042900',alpha=1) +
             geom_bar(aes(y=(df$Price - df$Growth)),stat="identity", fill="#03561C",alpha=0.5 ,
                      size=ifelse(df$Growth<0,1,0)) +
-            geom_text(aes(label=ifelse(df$Growth<0,paste0(Price," (↓)"),paste0(Price," (↑)")),
+            geom_text(aes(label=ifelse(df$Growth<0,paste0(Price,"  (", round(df$Growth,1),")"),paste0(Price,"  (", round(df$Growth,1),")")),
                           y=ifelse(df$Growth<0, Price-Growth, Price)),hjust= -0.5, color= ifelse(df$Growth<0,"Red","DarkGreen"),
                           size=10,fontface="bold")+
-            scale_y_continuous(breaks = seq(0,max(df$Price)+100,50), limits = c(0, max(df$Price)+100))+
+            scale_y_continuous(breaks = seq(0,max(df$Price)+100,50), limits = c(0, max(df$Price)+50))+
             theme_minimal() +
             theme(
               plot.title = element_blank(),
@@ -92,10 +92,10 @@ runApp(
           # png("import.png", units = "in", height = 4.5, width = 11.25, res = 100)
           
           ggplot(df,aes(x=df$Name))  +
-            geom_bar(aes(y=df$Price),stat="identity", fill='#186866',alpha=1) +
+            geom_bar(aes(y=df$Price),stat="identity", fill='#186866',alpha=1, position = 'identity') +
             geom_bar(aes(y=(df$Price - df$Growth)),stat="identity", fill="#16D1CC",alpha=0.25 ,
-                     size=ifelse(df$Growth<0,1,0)) +
-            geom_text(aes(label=ifelse(df$Growth<0,paste0(Price," (↓)"),paste0(Price," (↑)")),
+                     size=ifelse(df$Growth<0,1,0), position = 'identity') +
+            geom_text(aes(label=ifelse(df$Growth<0,paste0(Price,"  (", round(df$Growth,1),")"),paste0(Price,"  (", round(df$Growth,1),")")),
                           y=ifelse(df$Growth<0, Price-Growth, Price)),hjust= -0.5, color= ifelse(df$Growth<0,"Red","#186866"),
                           size=10,fontface = "bold")+
             scale_y_continuous(breaks = seq(0,max(df$Price)+100,50), limits = c(0, max(df$Price)+100))+
