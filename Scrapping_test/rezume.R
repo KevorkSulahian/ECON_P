@@ -137,4 +137,4 @@ get_data <- function() {
   return(final)
 }
 data <- get_data()
-writexl::write_xlsx("rezume.xlsx")
+writexl::write_xlsx(data,"rezume.xlsx")

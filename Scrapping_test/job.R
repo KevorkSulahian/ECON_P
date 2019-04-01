@@ -31,7 +31,7 @@ get_data <- function(number) {
   
   get_links <- function(html) {
     html %>%
-      html_nodes(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "fontSize24", " " ))]') %>%
+      html_nodes(xpath = '/html/body/div[3]/form/div/div[3]/div/div/div/a') %>%
       html_attr(name = "href")
   }
   
@@ -46,7 +46,7 @@ get_data <- function(number) {
       trimws()
   }
   #test
-  # get_title(read_html(links[1]))
+  get_title(read_html(links[1]))
   
   get_company <- function(html) {
     html %>%
