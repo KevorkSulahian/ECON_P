@@ -66,9 +66,9 @@ runApp(
           # png("export.png", height = 2480, width = 3508 ,res = 500)
 
           ggplot(df,aes(x=df$Name))  +
-            geom_bar(aes(y=df$Price),stat="identity", fill='#042900',alpha=1) +
+            geom_bar(aes(y=df$Price),stat="identity", fill='#042900',alpha=1, position = 'identity') +
             geom_bar(aes(y=(df$Price - df$Growth)),stat="identity", fill="#03561C",alpha=0.5 ,
-                     size=ifelse(df$Growth<0,1,0)) +
+                     size=ifelse(df$Growth<0,1,0), position = 'identity') +
             geom_text(aes(label=ifelse(df$Growth<0,paste0(Price,"  (", round(df$Growth,1),")"),paste0(Price,"  (", round(df$Growth,1),")")),
                           y=ifelse(df$Growth<0, Price-Growth, Price)),hjust= -0.5, color= ifelse(df$Growth<0,"Red","DarkGreen"),
                           size=10,fontface="bold")+
