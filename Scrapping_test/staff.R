@@ -1,8 +1,6 @@
 library(dplyr)
 library(rvest)   
 library(stringr)
-library(XML)
-
 
 gets <- function(url_number) {
   url <- "https://www.staff.am/en/jobs?per_page=40&page="
@@ -83,6 +81,7 @@ gets <- function(url_number) {
       str_replace_all("Deadline: ","") %>%
       str_replace_all("\n"," ")
   }
+  #test
   # get_closed_date(read_html(links[1]))
   
   get_description <- function(html) {
@@ -90,6 +89,7 @@ gets <- function(url_number) {
       html_node(xpath = '//*[@id="job-post"]/div[2]') %>%
       html_text() 
   }
+  #test
   # get_description(read_html(links[1]))
   
   data <- data.frame(title = character(), company = character(), employment_type = character(),
@@ -123,8 +123,8 @@ multiple_gets <- function(number){
   }
   return(data)
 }
-
-scraped_data <- multiple_gets(5)
+# website was updated add a loop to figure out where it ends
+scraped_data <- multiple_gets(1)
 scraped_data2 <- scraped_data[!duplicated(scraped_data$description),]
 scraped_data3 <- scraped_data %>% distinct(description, .keep_all = T)
 writexl::write_xlsx(scraped_data, "staff.xlsx")
