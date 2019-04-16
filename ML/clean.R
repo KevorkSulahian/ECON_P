@@ -45,6 +45,7 @@ for (i in 1:nrow(temp)) {
   if(nchar(temp$ID[i]) < 5) {
     temp$name[i] <- temp$rownumber[i]
   }
+  
 }
 
 temp1 <- temp[complete.cases(temp),]
