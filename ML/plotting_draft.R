@@ -24,7 +24,11 @@ for (i in 1:nrow(df_letter)) {
 }
 df_letter$category <- as.factor(df_letter$category)
 
+<<<<<<< HEAD
+{ 
+=======
 {
+>>>>>>> 1ef6eb43b35a82610edbe211dbce2bd849d7b259
 treemap(df_letter,index=c('name'),
         vSize='iratsum',
         vColor = 'category',
