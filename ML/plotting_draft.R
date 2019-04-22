@@ -47,7 +47,7 @@ ploting <- treemap(final,index=c('category', 'name'),
         type = 'categorical',
         # title = 'Something',
         overlap.labels = 0.7,
-        fontsize.labels = 16
+        fontsize.labels = c(0,16)
         # inflate.labels = T)
 )
 dev.off()
