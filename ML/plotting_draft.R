@@ -5,6 +5,7 @@ library(ggplot2)
 library(ggraph)
 library(igraph)
 library(stringr)
+library(RColorBrewer)
 
 df <- read_excel("try.xlsx")
 df$iratsum = as.numeric(df$iratsum)
@@ -24,18 +25,39 @@ for (i in 1:nrow(df_letter)) {
 }
 df_letter$category <- as.factor(df_letter$category)
 
-<<<<<<< HEAD
-{ 
-=======
+final <- data.frame()
+for (i in 1:nrow(df_letter)) {
+  if(nchar(df_letter$ID[i]) > 5) {
+    final <- rbind(final, df_letter[i,])
+  }
+}
+
+final$sub_category<- ""
+
+for (i in 1:nrow(final)) {
+  final$sub_category <- substr(final$ID,1,4)
+}
+
 {
->>>>>>> 1ef6eb43b35a82610edbe211dbce2bd849d7b259
-treemap(df_letter,index=c('name'),
+png(width = 1336,height=768, file='uspop_treemap.png')
+ploting <- treemap(final,index=c('category', 'name'),
         vSize='iratsum',
+        # palette = ,
         vColor = 'category',
         type = 'categorical',
-        palette = 'Set3',
-        title = 'Something',
-        fontsize.title = 14)
-labelAlign= list(c('left','center'),c('left','top'), c('right','bottom'))
-png(width = 1336,height=768, file='uspop_treemap')
+        # title = 'Something',
+        overlap.labels = 0.7,
+        fontsize.labels = 16
+        # inflate.labels = T)
+)
+dev.off()
 }
+
+
+treemap(final,
+        index=c("category","sub_category","name"),
+        vSize="iratsum",
+        type="index"
+)
+
+# writexl::write_xlsx(final, 'final.xlsx')
