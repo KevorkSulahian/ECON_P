@@ -25,7 +25,6 @@ for (i in 1:nrow(df_letter)) {
 }
 df_letter$category <- as.factor(df_letter$category)
 
-<<<<<<< HEAD
 final <- data.frame()
 for (i in 1:nrow(df_letter)) {
   if(nchar(df_letter$ID[i]) > 5) {
@@ -42,21 +41,13 @@ for (i in 1:nrow(final)) {
 {
 png(width = 1336,height=768, file='uspop_treemap.png')
 ploting <- treemap(final,index=c('category', 'name'),
-=======
-<<<<<<< HEAD
-{ 
-=======
-{
->>>>>>> 1ef6eb43b35a82610edbe211dbce2bd849d7b259
-treemap(df_letter,index=c('name'),
->>>>>>> b0633908ba5ba428eb34e5eb1aa6ea6f6637a569
         vSize='iratsum',
         # palette = ,
         vColor = 'category',
         type = 'categorical',
         # title = 'Something',
         overlap.labels = 0.7,
-        fontsize.labels = 16
+        fontsize.labels = c(0,16)
         # inflate.labels = T)
 )
 dev.off()
