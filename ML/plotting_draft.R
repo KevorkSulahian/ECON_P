@@ -9,6 +9,7 @@ library(RColorBrewer)
 
 df <- read_excel("try.xlsx")
 df$iratsum = as.numeric(df$iratsum)
+df$artank = as.numeric(df$artank)
 # df$iratsum
 # class(df$iratsum)
 df_letter <- df
@@ -32,6 +33,13 @@ for (i in 1:nrow(df_letter)) {
   }
 }
 
+# final2 <- data.frame()
+# for (i in 1:nrow(df_letter)) {
+#   if(nchar(df_letter$ID[i]) == 4) {
+#     final2 <- rbind(final2, df_letter[i,])
+#   }
+# }
+
 final$sub_category<- ""
 
 for (i in 1:nrow(final)) {
@@ -39,25 +47,43 @@ for (i in 1:nrow(final)) {
 }
 
 {
-png(width = 1336,height=768, file='uspop_treemap.png')
+png(width = 1336,height=768, file='Company.png')
 ploting <- treemap(final,index=c('category', 'name'),
-        vSize='iratsum',
-        # palette = ,
+        vSize='artank',
+        palette = c("#54A7AA", "#B23D6D", "#F3CF24"),
         vColor = 'category',
         type = 'categorical',
-        # title = 'Something',
-        overlap.labels = 0.7,
-        fontsize.labels = c(0,16)
-        # inflate.labels = T)
+        title = 'Something',
+        position.legend = 'none',
+        fontsize.labels = c(0,18)
 )
 dev.off()
 }
 
+# #54A7AA, #B23D6D, #F3CF24
+# treemap(Jan_Feb_Data,
+#         index=c("category", ),
+#         vSize="",
+#         type="index"
+# )
 
-treemap(final,
-        index=c("category","sub_category","name"),
-        vSize="iratsum",
-        type="index"
-)
+Jan_Feb_Data <- readxl::read_excel('Jan_Feb_Data.xlsx')
 
-# writexl::write_xlsx(final, 'final.xlsx')
+
+
+{
+  png(width = 1336,height=768, file='Sector.png')
+  ploting <- treemap(Jan_Feb_Data,index=c('category', "Ընթացիկ գներով հունվար-փետրվար (մլրդ դրամ)"),
+                     vSize='Հունվար-Փետրվար',
+                     palette = c("#54A7AA", "#B23D6D", "#F3CF24"),
+                     vColor = 'category',
+                     type = 'categorical',
+                     title = 'Something',
+                     position.legend = 'none',
+                     fontsize.labels = c(0,18)
+  )
+  dev.off()
+}
+
+# treemap
+# writexl::write_xlsx(Jan_Feb_Data, 'Jan_Feb_Data.xlsx')
