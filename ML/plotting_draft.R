@@ -46,6 +46,8 @@ for (i in 1:nrow(final)) {
   final$sub_category <- substr(final$ID,1,4)
 }
 
+final$name <- paste(final$name, final$artank)
+
 {
 png(width = 1336,height=768, file='Company.png')
 ploting <- treemap(final,index=c('category', 'name'),
@@ -54,8 +56,11 @@ ploting <- treemap(final,index=c('category', 'name'),
         vColor = 'category',
         type = 'categorical',
         title = 'Something',
-        position.legend = 'none',
-        fontsize.labels = c(0,18)
+        position.legend = 'bottom',
+        fontsize.labels = c(0,28),
+        # inflate.labels = T,
+        force.print.labels = F,
+        overlap.labels = 0
 )
 dev.off()
 }
@@ -69,21 +74,27 @@ dev.off()
 
 Jan_Feb_Data <- readxl::read_excel('Jan_Feb_Data.xlsx')
 
+Jan_Feb_Data$`Հունվար-Փետրվար`
 
+Jan_Feb_Data$`Ընթացիկ գներով հունվար-փետրվար (մլրդ դրամ)`<-  paste0(Jan_Feb_Data$`Ընթացիկ գներով հունվար-փետրվար (մլրդ դրամ)`,
+                                                                    " ", round(Jan_Feb_Data$`Հունվար-Փետրվար`))
 
 {
-  png(width = 1336,height=768, file='Sector.png')
+  png(width = 1336,height=768, file='Sector2.png')
   ploting <- treemap(Jan_Feb_Data,index=c('category', "Ընթացիկ գներով հունվար-փետրվար (մլրդ դրամ)"),
                      vSize='Հունվար-Փետրվար',
                      palette = c("#54A7AA", "#B23D6D", "#F3CF24"),
                      vColor = 'category',
                      type = 'categorical',
                      title = 'Something',
-                     position.legend = 'none',
-                     fontsize.labels = c(0,18)
+                     position.legend = 'bottom',
+                     fontsize.labels = c(0,26),
+                     # inflate.labels = T,
+                     force.print.labels = F,
+                     overlap.labels = 0
   )
   dev.off()
 }
-
+ 
 # treemap
 # writexl::write_xlsx(Jan_Feb_Data, 'Jan_Feb_Data.xlsx')
