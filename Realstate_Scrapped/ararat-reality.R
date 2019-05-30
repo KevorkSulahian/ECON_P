@@ -153,5 +153,5 @@ data <- data.frame(names = character(), area = character(), room = character(),
                    status1 = character())
 
 data = rbind(data,sale_apartment,sale_house,sale_commercial,sale_land,rent_apartment,rent_commerical,rent_house)
-# writexl::write_xlsx(data, "jobfinder.xlsx")
+# writexl::write_xlsx(data, "ararat-reality.xlsx")
 
