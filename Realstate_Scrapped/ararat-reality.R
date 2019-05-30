@@ -110,7 +110,14 @@ loop_it <- function(url) {
 
 
 
-data <- loop_it('https://ararat-realty.com/en/search/2/sale-apartment/?page=')
+sale-apartment <- loop_it('https://ararat-realty.com/en/search/2/sale-apartment/?page=')
+sale-house <- loop_it('https://ararat-realty.com/en/search/3/sale-house/?page=')
+sale-commercial <- loop_it('https://ararat-realty.com/en/search/4/sale-commercial/?page=')
+sale-land <- loop_it('https://ararat-realty.com/en/search/5/sale-land/?page=')
+rent-apartment <- loop_it('https://ararat-realty.com/en/search/6/rent-apartment/?page=')
+rent-commerical <- loop_it('https://ararat-realty.com/en/search/8/rent-commercial/?page=')
+rent-house <- loop_it('https://ararat-realty.com/en/search/7/rent-house/?page=')
+
 
 # writexl::write_xlsx(data, "jobfinder.xlsx")
 
