@@ -113,6 +113,7 @@ loop_it <- function(url) {
     temp_url <- paste0(url,i)
     temp <- first_website(temp_url)
     data <- rbind(data,temp)
+    
   }
   return(data)
 }
@@ -120,13 +121,37 @@ loop_it <- function(url) {
 
 
 sale_apartment <- loop_it('https://ararat-realty.com/en/search/2/sale-apartment/?page=')
+sale_apartment$type = 'Apartment'
+sale_apartment$status1 = 'For Sale'
+
 sale_house <- loop_it('https://ararat-realty.com/en/search/3/sale-house/?page=')
+sale_house$type <- 'House'
+sale_house$status1 <- 'For Sale'
+
 sale_commercial <- loop_it('https://ararat-realty.com/en/search/4/sale-commercial/?page=')
+sale_commercial$type <- 'Commerical'
+sale_commercial$status1 = 'For Sale'
+
 sale_land <- loop_it('https://ararat-realty.com/en/search/5/sale-land/?page=')
+sale_land$type <- 'Land'
+sale_land$status1 = 'For Sale'
+
 rent_apartment <- loop_it('https://ararat-realty.com/en/search/6/rent-apartment/?page=')
+rent_apartment$type = 'Apartment'
+rent_apartment$status1 = 'For Rent'
+
 rent_commerical <- loop_it('https://ararat-realty.com/en/search/8/rent-commercial/?page=')
+rent_commerical$type = 'Commerical'
+rent_commerical$status1 = 'For Rent'
+
 rent_house <- loop_it('https://ararat-realty.com/en/search/7/rent-house/?page=')
+rent_house$type = 'House'
+rent_house$status1 = 'For Rent'
 
+data <- data.frame(names = character(), area = character(), room = character(),
+                   price = character(), floor = character(), type = character(),
+                   status1 = character())
 
+data = rbind(data,sale_apartment,sale_house,sale_commercial,sale_land,rent_apartment,rent_commerical,rent_house)
 # writexl::write_xlsx(data, "jobfinder.xlsx")
 
