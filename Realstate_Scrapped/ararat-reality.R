@@ -92,14 +92,23 @@ loop_it <- function(url) {
   html <- read_html(url)
   
   last_boi<- function(html) {
-    html %>%
-      html_nodes(xpath = '//*[@id="main"]/div[4]/div/div/a[18]') %>%
+    
+    temp = html %>%
+      html_nodes(xpath = '//*[@id="main"]/div[4]/div/div') %>%
+      html_children() %>%
       html_text() %>%
-      as.numeric()
+      str_extract('[0-9]+') %>%
+      na.omit()
+    if (identical(temp, character(0))) {
+      return(1)
+    } else {
+      return(temp)
+    }
   }
   data <- data.frame(names = character(), area = character(), room = character(),
                      price = character(), floor = character())
   num <- last_boi(html)
+  num <- num[length(num)]
   for (i in 1:num) {
     temp_url <- paste0(url,i)
     temp <- first_website(temp_url)
@@ -110,13 +119,13 @@ loop_it <- function(url) {
 
 
 
-sale-apartment <- loop_it('https://ararat-realty.com/en/search/2/sale-apartment/?page=')
-sale-house <- loop_it('https://ararat-realty.com/en/search/3/sale-house/?page=')
-sale-commercial <- loop_it('https://ararat-realty.com/en/search/4/sale-commercial/?page=')
-sale-land <- loop_it('https://ararat-realty.com/en/search/5/sale-land/?page=')
-rent-apartment <- loop_it('https://ararat-realty.com/en/search/6/rent-apartment/?page=')
-rent-commerical <- loop_it('https://ararat-realty.com/en/search/8/rent-commercial/?page=')
-rent-house <- loop_it('https://ararat-realty.com/en/search/7/rent-house/?page=')
+sale_apartment <- loop_it('https://ararat-realty.com/en/search/2/sale-apartment/?page=')
+sale_house <- loop_it('https://ararat-realty.com/en/search/3/sale-house/?page=')
+sale_commercial <- loop_it('https://ararat-realty.com/en/search/4/sale-commercial/?page=')
+sale_land <- loop_it('https://ararat-realty.com/en/search/5/sale-land/?page=')
+rent_apartment <- loop_it('https://ararat-realty.com/en/search/6/rent-apartment/?page=')
+rent_commerical <- loop_it('https://ararat-realty.com/en/search/8/rent-commercial/?page=')
+rent_house <- loop_it('https://ararat-realty.com/en/search/7/rent-house/?page=')
 
 
 # writexl::write_xlsx(data, "jobfinder.xlsx")
