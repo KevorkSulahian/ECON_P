@@ -54,12 +54,13 @@ data18[-c(1:5)] <- sapply(data18[-c(1:5)], as.numeric)
 data18_countries <- data18[,-c(1:5)]
 
 
-data18AM <- data18[c(2,3,10)]
-for (i in 1:nrow(data18AM)) {
-  if(nchar(data18AM$`Code GCR`[i]) > 10 | nchar(data18AM$`Code GCR`[i]) == 3) {
-    data18AM$`Code GCR`[i] <- substr(data18AM$Series[i], 1,4)
+for (i in 1:nrow(data18)) {
+  if(nchar(data18$`Code GCR`[i]) > 10 | nchar(data18$`Code GCR`[i]) == 3) {
+    data18$`Code GCR`[i] <- substr(data18$Series[i], 1,4)
   }
 }
+data18AM <- data18[c(2,3,10)]
+
 
 
 ### make sure to make star pos
