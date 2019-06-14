@@ -27,7 +27,7 @@ for (i in 2:9) {
 
 for (i in dfs) {
   temp <- get(i)
-  temp <- temp[,c(1,2)]
+  temp <- temp[,c(1,5)] # 5 is the 6 column boi
   colnames(temp) = c("names", i)
   assign(i, temp)
 }
@@ -38,12 +38,7 @@ for (i in dfs) {
 }
 
 
-first_try = df[7,]
-# first_try <- first_try[colSums(!is.na(first_try)) > 0]
-first_try = first_try[,-c(2:35)]
-# first_try <- first_try[,-2]
-#   
-write_xlsx(first_try,path = 'ML_ready/first_try.xlsx')
-
-second_try <- df[7,]
+second_try <- df[2,]
 write_xlsx(second_try,path = 'ML_ready/second_try.xlsx')
+
+write_xlsx(df,path = 'ML_ready/full_data.xlsx')
