@@ -55,13 +55,13 @@ get_data <- function(number) {
   # # test
   # get_salary(read_html(links[1]))
   
-  # get_description <- function(html) {
-  #   html %>%
-  #     html_node(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "job-descr", " " ))]') %>%
-  #     html_text() 
-  # }
+  get_description <- function(html) {
+    html %>%
+      html_node(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "job-descr", " " ))]') %>%
+      html_text()
+  }
   # test
-  get_description(read_html(links[1]))
+  # get_description(read_html(links[1]))
   
   get_location <- function(html) {
     html %>%

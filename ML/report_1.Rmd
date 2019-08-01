@@ -1,0 +1,345 @@
+---
+title: "Report on forcast"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Loading the libraries
+
+```{r message=FALSE}
+
+library(readxl)
+library(MASS)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(glmnet)
+library(xgboost)
+
+```
+
+
+
+## The data
+
+### In this data set we set the data one month ahead (if the observations (independent data) are on January of 2019 then the main (dependent) is on Faburary 2019)
+
+Cleaning the data
+```{r results='hide', message=FALSE}
+
+df <- read_xlsx("ML_ready/data_ML.xlsx")
+
+main <- read_xls("economy.xls", sheet = '2011-2019 NACE 2')
+
+colnames(main) <- main[3,]
+
+main <- main[4,]
+main <- main[,c(16:103)]
+
+df = as.data.frame(df)
+rownames(df) = df$months
+df$months = NULL
+
+df = df[, colSums(df != 0) > 0]
+df = df[, (df[86,] != 0) > 0]
+
+df_sum <- colSums(df)
+df_sum <- sort(df_sum,decreasing = T)
+
+top_20 = head(df_sum,n = 20)
+top_20_names = colnames(t(as.data.frame(top_20)))
+top_20_loc = which(colnames(df) %in% top_20_names)
+
+try <- df[, top_20_loc]
+try <- try[-c(1:33),]
+
+main <- main[,c(34:88)] 
+main <- t(main)
+
+names <- colnames(try)
+colnames(try) <- paste0("name",c(1:20))
+
+try <- try[-c(56,57),]
+###########
+########### Here we delete the last month of Try and the first month of Main
+########### Because we want to predict one month into the future? 
+try <- try[-c(55),]
+main <- main[-1]
+###########
+###########
+
+try$main <- as.numeric(main)
+try$main <- try$main * 100000000 ### Multiply by hundred million
+
+
+```
+
+### Printing the final form of the data
+
+```{r}
+
+head(try)
+
+```
+
+
+### Spliting the data into train*.85 and test*.15
+
+```{r results='hide', message=FALSE}
+index <- sample(1:nrow(try),round(0.85*nrow(try)))
+
+train <- try[index,]
+test <- try[-index,]
+
+n <- names(train)
+
+```
+
+### Our formula
+
+```{r}
+
+f <- as.formula(paste("main ~",paste(n[!n %in% "main"], collapse = " + ")))
+
+```
+## Prediction Models
+
+### Linear Regression
+
+```{r}
+fit <- lm(main~., train)
+
+pred1<-predict(fit, newdata = test)
+
+RMSE1<-RMSE(test$main, pred1)
+
+MAE1 <- MAE(test$main, pred1)
+```
+
+```{r echo=FALSE}
+print(paste0("RMSE for Linear Regression: ", RMSE1))
+
+print(paste0("MAE for Linear Regression: ", MAE1))
+```
+
+### K- Nearest Neighbors 
+```{r message=FALSE}
+ctrl <- trainControl(method = "cv", number = 10)
+
+knn_c <- train(f, data = train, method = "knn",
+               trControl = ctrl, preProcess = c("center", "scale"), tuneLength = 10)
+```
+
+```{r echo=FALSE}
+ggplot(knn_c, metric = "RMSE")
+```
+
+```{r}
+model_predict_test = predict(knn_c, newdata = test)
+which.min(c(sqrt(mean(abs(model_predict_test - test$main)^2)),sqrt(mean((test$main- predict(fit, test))^2))))
+
+RMSE_KNN <- RMSE(test$main, model_predict_test)
+
+MAE_KNN <- MAE(test$main, model_predict_test)
+```
+
+```{r echo=FALSE}
+
+print(paste0("RMSE for KNN: ",RMSE_KNN))
+print(paste0("MAE for KNN: ",MAE_KNN))
+```
+
+## Tree
+
+```{r message=FALSE}
+my_model <- rpart(f,subset = index, data= try)
+```
+
+```{r echo=FALSE}
+rpart.plot(my_model, type = 4)
+```
+
+```{r}
+predictions<-predict(my_model,newdata=test)
+
+RMSE_Tree <- RMSE(predictions, test$main)
+
+MAE_Tree <- MAE(predictions, test$main)
+```
+
+```{r echo = FALSE}
+print(paste0("RMSE for Tree: ",RMSE_Tree))
+print(paste0("MAE for Tree: ",MAE_Tree))
+```
+
+## forrest
+
+```{r message=FALSE}
+set.seed(1)
+bag.black <- randomForest(f,data=try, subset=index,importance =TRUE)
+
+prediction_forest = predict(bag.black, newdata=test[1,])
+```
+
+```{r}
+
+getTree(bag.black,1,labelVar=TRUE)
+  
+```
+
+```{r}
+MAE_forest <- MAE(prediction_forest, test$main)
+RMSE_forest <- RMSE(prediction_forest, test$main)
+```
+
+```{r echo = FALSE}
+print(paste0("RMSE for Random Forrest: ",RMSE_forest))
+print(paste0("MAE for Random Forrest: ",MAE_forest))
+```
+
+## Ridge Regression
+
+```{r message=FALSE}
+x = model.matrix(f, data = try)[,c(-1,-2)]
+y = try$main
+
+grid = 10^seq(10,-2, length = 100)
+
+ridge.mod = glmnet(x[index,], y[index], alpha = 0, lambda = grid,
+                   thresh = 1e-12)
+ridge.pred =predict(ridge.mod, s = 4, newx = x[-index,])
+
+RMSE_ridge <- RMSE(ridge.pred, y[-index])
+
+MAE_ridge <- MAE(ridge.pred, y[-index])
+```
+
+```{r echo = FALSE}
+print(paste0("RMSE for Ridge Regression: ",RMSE_ridge))
+print(paste0("MAE for Ridge Regression: ",MAE_ridge))
+```
+
+
+## Lasso Regression 
+
+```{r message=FALSE}
+set.seed(1)
+
+lasso.mod=glmnet(x[index,],y[index],alpha=1,lambda=grid)
+cv.out=cv.glmnet(x[index,],y[index],alpha=1)
+
+bestlam=cv.out$lambda.min
+
+lasso.pred=predict(lasso.mod,s=bestlam,newx=x[-index,])
+RMSE_lasso <- RMSE(lasso.pred, y[-index])
+
+MAE_lasso <- MAE(lasso.pred, y[-index])
+
+```
+
+```{r echo = FALSE}
+print(paste0("RMSE for Lasso Regression: ",RMSE_lasso))
+print(paste0("MAE for Lasso Regression: ",MAE_lasso))
+```
+
+##  Extreme Gradient Boosting
+
+```{r message=FALSE, results='hide'}
+set.seed(1)
+dtrain2 <- xgb.DMatrix(data = x[index,], label = y[index])
+dtest2 <- xgb.DMatrix(data = x[-index,], label = y[-index])
+watchlist <- list(train= dtrain2, test= dtest2)
+set.seed(1)
+bst2 <- xgb.train(data= dtrain2, max.depth=20, eta=0.09, nrounds=120,watchlist=watchlist,
+                  base_score = 0.1)
+
+xgb_test <- predict(bst2, data.matrix(test[,-c(1,21)]))
+
+RMSE_xgboost <- RMSE(test$main, xgb_test)
+
+MAE_xgboost <- MAE(test$main,xgb_test)
+```
+
+```{r echo = FALSE}
+print(paste0("RMSE for XGB: ",RMSE_xgboost))
+print(paste0("MAE for XGB: ",MAE_xgboost))
+```
+
+```{r echo=FALSE}
+
+rmse_table <- table(RMSE1, RMSE_forest, RMSE_lasso, RMSE_ridge, RMSE_Tree, RMSE_xgboost)
+rmse <- as.data.frame(rmse_table)
+rmse <- rmse[-c(7)]
+rmse <- t(rmse)
+
+```
+
+```{r}
+head(rmse)
+```
+
+```{r echo=FALSE}
+print(paste0("the Algorithm with the least error is: ", rmse[which.min(rmse)]))
+```
+
+```{r include=FALSE}
+# sum(ridge.pred)/sum(y[-index])
+# 
+# RMSE_forest/mean(y[-index])
+# 
+# RMSE_lasso/mean(y[-index])
+# 
+# RMSE_xgboost/mean(y[-index])
+# 
+# RMSE_ridge/mean(y[-index])
+# 
+# RMSE_forest/mean(y[-index])
+
+```
+
+```{r echo=FALSE}
+
+difference <- function(x1,x2) {
+  abs(x1-x2)/((x1+x2)/2)
+}
+
+# difference(ridge.pred,test$main)
+
+mean_error <- function(x) {
+  sum(x)/length(x)
+}
+
+```
+
+```{r}
+
+## Ridge Regression
+mean_error(difference(ridge.pred,test$main))
+
+## Extreme Gradient Boosting
+mean_error(difference(xgb_test,test$main))
+
+## Lasso Regression
+mean_error(difference(lasso.pred,test$main))
+
+##Forest
+mean_error(difference(prediction_forest,test$main))
+
+# Linear Regression
+mean_error(difference(pred1,test$main))
+
+## knn
+mean_error(difference(model_predict_test,test$main))
+
+## Tree
+mean_error(difference(model_predict_test,test$main))
+
+```

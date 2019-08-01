@@ -3,13 +3,14 @@ library(rvest)
 library(stringr)
 
 gets <- function(url_number) {
-  url <- "https://www.staff.am/en/jobs?per_page=40&page="
-  url <- paste0(url, url_number)
+  url <- "https://www.staff.am/en/jobs?page="
+  url2 <- '&per-page=50'
+  url <- paste0(url, url_number,url2)
   html <- read_html(url)
   
   get_links <- function(html) {
     html %>%
-      html_nodes(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "width100", " " ))]') %>%
+      html_nodes(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "job_load_more", " " ))]') %>%
       html_attr(name = "href")
   }
   
@@ -36,7 +37,7 @@ gets <- function(url_number) {
       unlist()
   }
   # test
-   # get_company(read_html(links[1]))
+  # get_company(read_html(links[1]))
   
   get_employment_type <- function(html) {
     html %>%
@@ -116,7 +117,7 @@ gets <- function(url_number) {
 
 multiple_gets <- function(number){
   data <- data.frame(title = character(), company = character(), employment_type = character(),
-                     category = character(), location = character(), close_date = character())
+                        category = character(), location = character(), close_date = character())
   for(i in 1:number) {
     temp <- gets(number)
     data <- rbind(data,temp)
@@ -124,7 +125,7 @@ multiple_gets <- function(number){
   return(data)
 }
 # website was updated add a loop to figure out where it ends
-scraped_data <- multiple_gets(1)
+scraped_data <- multiple_gets(12)
 scraped_data2 <- scraped_data[!duplicated(scraped_data$description),]
 scraped_data3 <- scraped_data %>% distinct(description, .keep_all = T)
-writexl::write_xlsx(scraped_data, "staff.xlsx")
+writexl::write_xlsx(scraped_data3, "staff.xlsx")

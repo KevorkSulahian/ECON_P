@@ -29,7 +29,8 @@ runApp(
         if (is.null(inFile))
           return(NULL)
         df  <- readxl::read_xlsx(inFile$datapath, sheet = 1, col_names = TRUE) #Reading the file
-        # df  <- readxl::read_xlsx("Import graph.xlsx", sheet = 1, col_names = TRUE) #Reading the file
+        # df  <- readxl::read_xlsx("Export graph.xlsx", sheet = 1, col_names = TRUE) #Reading the file
+        # df <- df[-c(1:3),]
         colnames(df) <-c("Name", "Price","Growth")
         df$Price <- as.numeric(df$Price)
         df$Growth <- as.numeric(df$Growth)

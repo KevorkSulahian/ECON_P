@@ -1,7 +1,7 @@
 library(readxl)
 library(sjmisc)
 library(stringr)
-df <- read_excel("2019-2.xls", sheet = "2019_Փետրվար")
+df <- read_excel("2019-2.xls", sheet = "2019_Մարտ")
 
 df <- df[,c(1,2,3,10)]
 df <- df[-c(1:45),]

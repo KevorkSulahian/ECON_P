@@ -236,19 +236,8 @@ plot(fc2 <- forecast(fit2, h = 6))
 ## ok some shit has gotten done nigga
 ## use full Data with the data boi
 
-#####
-##### BIG BOI FORCASTE
-# GOTTA LOOP MY BOY
 
 
-data <- read_excel("ML_ready/full_data.xlsx")
-
-data_names <- data$names
-data <- data[,-c(1,2)]
-
-data[] <- lapply(data, function(x) as.numeric(x))
-
-data[is.na(data)] <- 0
 
 first_month_forcast <- c(0)
 
@@ -261,4 +250,11 @@ for (i in 1:nrow(data)) {
 }
 
 data$first_forcast <- round(first_month_forcast)
-  
+
+
+#####
+##### BIG BOI FORCASTE
+# GOTTA LOOP MY BOY
+
+
+

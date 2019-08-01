@@ -8,7 +8,7 @@ for (i in 2:9) {
   temp <- (paste0('201',i))
   
   if(i==9) {
-    for (j in 1:2) {
+    for (j in 1:6) { ### change here for 2019
       name <- (paste0(temp,'_',my_months[j]))
       df_name <- (paste0('ML_files/',name,'.xlsx'))
       assign(name,read_xlsx(df_name))
@@ -31,7 +31,7 @@ for (i in dfs) {
   colnames(temp) = c("names", i)
   assign(i, temp)
 }
-df <- get(dfs[86])
+df <- get(dfs[90]) # change here too
 
 for (i in dfs) {
   df <- merge(x=df, y=get(i), by = 'names', all.x = T)
@@ -42,3 +42,25 @@ second_try <- df[2,]
 write_xlsx(second_try,path = 'ML_ready/second_try.xlsx')
 
 write_xlsx(df,path = 'ML_ready/full_data.xlsx')
+
+
+
+
+
+data <- read_excel("ML_ready/full_data.xlsx")
+
+data_names <- data$names
+
+data <- data[,-c(1,2)]
+
+data[] <- lapply(data, function(x) as.numeric(x))
+
+data[is.na(data)] <- 0
+
+
+data2 <- t(data)
+rows <- rownames(data2)
+colnames(data2) <- data_names
+data2 <- as.data.frame(data2)
+data2$months = rows
+writexl::write_xlsx(data2, 'ML_ready/data_ML.xlsx')
