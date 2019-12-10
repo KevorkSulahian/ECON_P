@@ -99,7 +99,7 @@ runApp(
             geom_text(aes(label=ifelse(df$Growth<0,paste0(Price,"  (", round(df$Growth,1),")"),paste0(Price,"  (", round(df$Growth,1),")")),
                           y=ifelse(df$Growth<0, Price-Growth, Price)),hjust= -0.5, color= ifelse(df$Growth<0,"Red","#186866"),
                           size=10,fontface = "bold")+
-            scale_y_continuous(breaks = seq(0,max(df$Price)+100,50), limits = c(0, max(df$Price)+100))+
+            scale_y_continuous(breaks = seq(0,max(df$Price)+170,50), limits = c(0, max(df$Price)+150))+
             theme_minimal() +
             theme(
               plot.title = element_blank(),

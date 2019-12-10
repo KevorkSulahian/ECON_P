@@ -1,0 +1,64 @@
+---
+title: "3_tsf"
+author: "Kevork Sulahian"
+date: "August 27, 2019"
+output: pdf_document
+---
+```{r}
+library(readxl)
+
+df <- read_xls('economy.xls', sheet='2011-2019 NACE 2')
+
+df = df[4,]
+df = df[-c(1,3)]
+rownames(df) = df[1]
+df = df[-1]
+df = t(df)
+df[] <- sapply(df[],function(x) as.numeric(as.character(x)))
+df = as.numeric(df)
+df= df * 1000000
+ts_train = ts(df[1:99], start = c(2011,1), frequency = c(12))
+ts_test = ts(df, start = c(2011,1), frequency = c(12))
+
+```
+```{r}
+plot(ts_train)
+
+```
+
+```{R}
+HW=HoltWinters(ts_train)
+HW
+```
+
+```{r}
+plot(HW,col="blue")
+
+```
+blue line= the original data, red line= the smoothed data
+
+
+```{r}
+HoltWintersForecast<-predict(HW,6,prediction.interval= TRUE)
+HoltWintersForecast
+```
+
+```{r}
+# >par(mfrow=c(2,1))
+```
+
+```{r}
+library(forecast)
+auto.arima(ts_train)
+forecast(auto.arima(ts_test))
+```
+
+```{r}
+
+par(mfrow=c(2,1))
+{plot(forecast(auto.arima(ts_train)),xlab="Time",ylab="Number of births")
+lines(ts_test,type="l",col="black")
+plot(forecast(auto.arima(ts_test)),xlab="Time",ylab="Number of births")
+}
+
+```

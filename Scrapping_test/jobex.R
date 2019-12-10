@@ -94,7 +94,7 @@ get_close_date <- function(html) {
     trimws()
 }
 #test
-get_close_date(link)
+# get_close_date(link)
 
 data <- data.frame(title = character(), category = character(), company = character(),
                    location = character(), employment_type = character(), description = character(),

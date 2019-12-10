@@ -1,0 +1,298 @@
+---
+title: "report_3"
+author: "Kevork Sulahian"
+date: "August 7, 2019"
+output: pdf_document
+---
+
+```{r message=FALSE}
+
+library(readxl)
+library(MASS)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(glmnet)
+library(xgboost)
+
+```
+
+Cleaning the Data
+
+```{r results='hide', message=FALSE}
+
+df <- read_xls('economy.xls', sheet='2011-2019 NACE 2')
+df <- df[c(4,6,11,30,34),]
+
+df <- df[,-c(1,3)]
+
+my_months <- c('JAN','FEB','MARCH','APRIL','MAY','JUNE','JULY','AUG','SEP', 'OCT','NOV','DEC')
+my_years <- c(2011:2019)
+df_months = c()
+j = 0
+for (i in 2:length(df)) {
+  
+  if((i-2)%%12==0) {
+    j = j + 1
+    df_months = c(df_months, paste0(my_years[j], '_', my_months))
+  }
+}
+
+
+df_months = head(df_months,-6)
+
+df <- as.data.frame(t(df))
+cols <- df[1,]
+cols = as.character(unlist(cols))
+df <- df[-c(1),]
+colnames(df) <- as.character(cols)
+rownames(df) <- df_months
+df[] <- sapply(df[],function(x) as.numeric(as.character(x)))
+
+df$`Total industry` = df$`Total industry` * 1000000
+df$`mining and quarrying` = df$`mining and quarrying` * 1000000
+df$manufacturing = df$manufacturing * 1000000
+df$`Electricity, gas, steam and air conditioning supply` = df$`Electricity, gas, steam and air conditioning supply` * 1000000
+df$`Water supply, sewerage, waste management and remediation activites` = df$`Water supply, sewerage, waste management and remediation activites` * 1000000
+
+
+
+```
+
+## T-1 = T
+```{r}
+total = df$`Total industry`
+names = rownames(df)
+df = df[-102,]
+total = total[-1]
+names = names[-1]
+rownames(df) = names
+df$`Total industry`=total
+```
+
+
+```{r}
+
+head(df)
+
+```
+
+
+
+### Spliting the data into train*.85 and test*.15
+
+```{r results='hide', message=FALSE}
+index <- sample(1:nrow(df),round(0.85*nrow(df)))
+
+train <- df[index,]
+test <- df[-index,]
+
+n <- names(train)
+
+```
+
+
+```{r}
+df$`Total industry`
+f <- as.formula(`Total industry`~ `mining and quarrying` + manufacturing + `Electricity, gas, steam and air conditioning supply` + `Water supply, sewerage, waste management and remediation activites`)
+
+```
+
+## Prediction Models
+
+### Linear Regression
+
+```{r}
+attach(df)
+fit <- lm(`Total industry`~., train)
+
+pred1<-predict(fit, newdata = test)
+
+RMSE1<-RMSE(test$`Total industry`, pred1)
+
+MAE1 <- MAE(test$`Total industry`, pred1)
+```
+
+
+```{r echo=FALSE}
+print(paste0("RMSE for Linear Regression: ", RMSE1))
+
+print(paste0("MAE for Linear Regression: ", MAE1))
+```
+
+### K- Nearest Neighbors 
+```{r message=FALSE}
+ctrl <- trainControl(method = "cv", number = 5)
+
+knn_c <- train(f, data = train, method = "knn",
+               trControl = ctrl, preProcess = c("center", "scale"), tuneLength = 5)
+```
+
+
+
+```{r}
+model_predict_test = predict(knn_c, newdata = test)
+# which.min(c(sqrt(mean(abs(model_predict_test - test$main)^2)),sqrt(mean((test$main- predict(fit, test))^2))))
+
+RMSE_KNN <- RMSE(test$`Total industry`, model_predict_test)
+
+MAE_KNN <- MAE(test$`Total industry`, model_predict_test)
+```
+
+```{r echo=FALSE}
+
+print(paste0("RMSE for KNN: ",RMSE_KNN))
+print(paste0("MAE for KNN: ",MAE_KNN))
+```
+
+## Tree
+
+```{r message=FALSE}
+my_model <- rpart(f,subset = index, data= df)
+```
+
+```{r echo=FALSE}
+rpart.plot(my_model, type = 4)
+```
+
+```{r}
+predictions<-predict(my_model,newdata=test)
+
+RMSE_Tree <- RMSE(predictions, test$`Total industry`)
+
+MAE_Tree <- MAE(predictions, test$`Total industry`)
+```
+
+```{r echo = FALSE}
+print(paste0("RMSE for Tree: ",RMSE_Tree))
+print(paste0("MAE for Tree: ",MAE_Tree))
+```
+
+
+## forrest
+
+```{r message=FALSE}
+# set.seed(1)
+# bag.black <- randomForest(f,data=df, subset=index,importance =TRUE)
+# 
+# prediction_forest = predict(bag.black, newdata=test[1,])
+```
+
+```{r}
+
+# getTree(bag.black,1,labelVar=TRUE)
+  
+```
+
+```{r}
+# MAE_forest <- MAE(prediction_forest, test$main)
+# RMSE_forest <- RMSE(prediction_forest, test$main)
+```
+
+```{r echo = FALSE}
+# print(paste0("RMSE for Random Forrest: ",RMSE_forest))
+# print(paste0("MAE for Random Forrest: ",MAE_forest))
+```
+
+
+## Ridge Regression
+
+```{r message=FALSE}
+x = model.matrix(f, data = df)[,c(-1)]
+y = df$`Total industry`
+
+grid = 10^seq(10,-2, length = 100)
+
+ridge.mod = glmnet(x[index,], y[index], alpha = 0, lambda = grid,
+                   thresh = 1e-12)
+ridge.pred =predict(ridge.mod, s = 4, newx = x[-index,])
+
+RMSE_ridge <- RMSE(ridge.pred, y[-index])
+
+MAE_ridge <- MAE(ridge.pred, y[-index])
+```
+
+```{r echo = FALSE}
+print(paste0("RMSE for Ridge Regression: ",RMSE_ridge))
+print(paste0("MAE for Ridge Regression: ",MAE_ridge))
+```
+
+
+## Lasso Regression 
+
+```{r message=FALSE}
+set.seed(1)
+
+lasso.mod=glmnet(x[index,],y[index],alpha=1,lambda=grid)
+cv.out=cv.glmnet(x[index,],y[index],alpha=1)
+
+bestlam=cv.out$lambda.min
+
+lasso.pred=predict(lasso.mod,s=bestlam,newx=x[-index,])
+RMSE_lasso <- RMSE(lasso.pred, y[-index])
+
+MAE_lasso <- MAE(lasso.pred, y[-index])
+
+```
+
+```{r echo = FALSE}
+print(paste0("RMSE for Lasso Regression: ",RMSE_lasso))
+print(paste0("MAE for Lasso Regression: ",MAE_lasso))
+```
+
+##  Extreme Gradient Boosting
+
+```{r message=FALSE, results='hide'}
+set.seed(1)
+dtrain2 <- xgb.DMatrix(data = x[index,], label = y[index])
+dtest2 <- xgb.DMatrix(data = x[-index,], label = y[-index])
+watchlist <- list(train= dtrain2, test= dtest2)
+set.seed(1)
+bst2 <- xgb.train(data= dtrain2, max.depth=10, eta=0.09, nrounds=120,watchlist=watchlist,
+                  base_score = 0.1)
+
+# xgb_test <- predict(bst2, data.matrix(test[,-c(1)]))
+
+# RMSE_xgboost <- RMSE(test$main, xgb_test)
+# 
+# MAE_xgboost <- MAE(test$main,xgb_test)
+```
+```{r echo=FALSE}
+
+
+rmse_table <- table(RMSE1, RMSE_lasso, RMSE_ridge, RMSE_Tree)
+rmse <- as.data.frame(rmse_table)
+rmse <- rmse[-c(5)]
+rmse <- t(rmse)
+which.min(as.numeric(rmse))
+```
+
+```{r echo=FALSE}
+print(paste0("the Algorithm with the least error is: ", rmse[which.min(rmse)]))
+```
+
+
+```{r echo=FALSE}
+
+difference <- function(x1,x2) {
+  abs(x1-x2)/((x1+x2)/2)
+}
+
+# difference(ridge.pred,test$main)
+
+mean_error <- function(x) {
+  sum(x)/length(x)
+}
+
+```
+
+```{r}
+options(scipen = 999)
+## Ridge Regression
+mean_error(difference(ridge.pred,test$`Total industry`))
+
+# Linear Regression
+mean_error(difference(pred1,test$`Total industry`))
+
+```

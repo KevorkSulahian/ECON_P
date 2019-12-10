@@ -65,7 +65,9 @@ get_info <- function(links) {
   
   return(data)
 }
-links<- get_links(8)
+
+links<- get_links(51)
+
 links<- unique(links)
 
 final <- get_info(links)

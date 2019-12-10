@@ -1,0 +1,327 @@
+---
+title: "Time Series Forcasting report"
+author: "Kevork Sulahian"
+date: "September 26, 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+```{r}
+library(readxl)
+library(forecast)
+```
+```{r echo=FALSE}
+
+plotForecastErrors <- function(forecasterrors)
+{
+  # make a histogram of the forecast errors:
+  mybinsize <- IQR(forecasterrors,na.rm = T)/4
+  mysd   <- sd(forecasterrors, na.rm = T)
+  mymin  <- min(forecasterrors,na.rm = T) - mysd*5
+  mymax  <- max(forecasterrors, na.rm = T) + mysd*3
+  # generate normally distributed data with mean 0 and standard deviation mysd
+  mynorm <- rnorm(10000, mean=0, sd=mysd)
+  mymin2 <- min(mynorm)
+  mymax2 <- max(mynorm)
+  if (mymin2 < mymin) { mymin <- mymin2 }
+  if (mymax2 > mymax) { mymax <- mymax2 }
+  # make a red histogram of the forecast errors, with the normally distributed data overlaid:
+  mybins <- seq(mymin, mymax, mybinsize)
+  hist(forecasterrors, col="red", freq=FALSE, breaks=mybins)
+  # freq=FALSE ensures the area under the histogram = 1
+  # generate normally distributed data with mean 0 and standard deviation mysd
+  myhist <- hist(mynorm, plot=FALSE)
+  # plot the normal curve as a blue line on top of the histogram of forecast errors:
+  points(myhist$mids, myhist$density, type="l", col="blue", lwd=2)
+}
+
+growth <- function(present, past) {
+  (present - past) / past
+}
+
+```
+```{R}
+
+df <- read_xls('economy.xls', sheet='2011-2019 NACE 2')
+
+df = df[4,]
+df = df[-c(1,3)]
+rownames(df) = df[1]
+df = df[-1]
+df = t(df)
+df[] <- sapply(df[],function(x) as.numeric(as.character(x)))
+df = as.numeric(df)
+df= df * 1000000
+ts = ts(df, start = c(2011,1), frequency = c(12))
+```
+
+```{r echo=FALSE}
+ts.plot(ts)
+```
+
+
+
+In this case, it appears that an additive model is not appropriate for describing this time series, since the size of the seasonal fluctuations and random fluctuations seem to increase with the level of the time series. Thus, we may need to transform the time series in order to get a transformed time series that can be described using an additive model. For example, we can transform the time series by calculating the natural log of the original data:
+
+```{r}
+
+log_ts <- log(ts)
+plot.ts(log_ts)
+
+```
+
+##Decomposing Time Series
+
+Decomposing a time series means separating it into its constituent components, which are usually a trend component and an irregular component, and if it is a seasonal time series, a seasonal component.
+
+###Decomposing Seasonal Data
+A seasonal time series consists of a trend component, a seasonal component and an irregular component. Decomposing the time series means separating the time series into these three components: that is, estimating these three components.
+
+```{r}
+ts_components <- decompose(ts)
+```
+we can print out the estimated values of the seasonal component 
+```{r}
+ts_components$seasonal
+```
+
+```{r echo=FALSE}
+plot(ts_components)
+```
+The plot above shows the original time series (top), the estimated trend component (second from top), the estimated seasonal component (third from top), and the estimated irregular component (bottom)
+
+
+## Seasonally Adjusting
+```{r}
+
+ts_seasonall <- ts - ts_components$seasonal
+
+```
+
+```{r echo=FALSE}
+plot(ts_seasonall)
+
+```
+## Holt-Winters Exponential Smoothing
+```{R}
+ts_forcaste <- HoltWinters(ts)
+ts_forcaste
+#
+```
+ The value of alpha (0.41) is relatively low, indicating that the estimate of the level at the current time point is based upon both recent observations and some observations in the more distant past. The value of beta is 0.00, indicating that the estimate of the slope b of the trend component is not updated over the time series, and instead is set equal to its initial value. This makes good intuitive sense, as the level changes quite a bit over the time series, but the slope b of the trend component remains roughly the same. In contrast, the value of gamma (0.96) is high, indicating that the estimate of the seasonal component at the current time point is just based upon very recent observations
+ 
+```{r}
+ts_forcaste$SSE
+
+```
+
+```{r echo = FALSE}
+plot(ts_forcaste)
+```
+
+
+
+```{r}
+ts_forcaste2 = forecast:::forecast.HoltWinters(ts_forcaste, h= 6)
+(as.data.frame(ts_forcaste2))[1]
+```
+
+```{r echo = FALSE}
+forecast:::plot.forecast(ts_forcaste2)
+```
+
+## Growth
+```{r}
+year_2018 <- window(ts, 2018, c(2018,12))
+year_2019 <- window(ts, 2019)
+year_2019_predict_HW <- (as.data.frame(ts_forcaste2))[1][c(1:6),]
+sum_year_2019 = sum(c(year_2019,year_2019_predict_HW))
+growth_HW <- growth(sum_year_2019,sum(year_2018))
+growth_HW 
+```
+
+
+
+
+
+We can investigate whether the predictive model can be improved upon by checking whether the in-sample forecast errors show non-zero autocorrelations at lags 1-20, by making a correlogram and carrying out the Ljung-Box test:
+```{r echo = FALSE}
+acf(ts_forcaste2$residuals, lag.max=20, na.action = na.pass)
+Box.test(ts_forcaste2$residuals, lag=20, type="Ljung-Box")
+```
+The correlogram shows that the autocorrelations for the in-sample forecast errors do not exceed the significance bounds for lags 1-20. Furthermore, the p-value for Ljung-Box test is 0.2, indicating that there is little evidence of non-zero autocorrelations at lags 1-20.
+
+
+We can check whether the forecast errors have constant variance over time, and are normally distributed with mean zero, by making a time plot of the forecast errors and a histogram (with overlaid normal curve):
+
+```{r }
+plot.ts(ts_forcaste2$residuals)
+
+```
+
+
+
+```{r }
+plotForecastErrors(ts_forcaste2$residuals)
+```
+
+From the time plot, it appears plausible that the forecast errors have constant variance over time. From the histogram of forecast errors, it seems plausible that the forecast errors are normally distributed with mean zero.
+
+Thus,there is little evidence of autocorrelation at lags 1-20 for the forecast errors, and the forecast errors appear to be normally distributed with mean zero and constant variance over time. This suggests that Holt-Winters exponential smoothing provides an adequate predictive model of the log of total productivity, which probably cannot be improved upon. Furthermore, the assumptions upon which the prediction intervals were based are probably valid.
+
+
+```{r}
+plot.ts(ts)
+ts_diff1 <-  diff(ts, differences = 1)
+
+plot.ts(ts_diff1)
+```
+
+The time series of differences (above) does appear to be stationary in mean and variance, as the level of the series stays roughly constant over time, and the variance of the series appears roughly constant over time
+
+```{r}
+
+acf(ts_diff1, lag.max=20)             # plot a correlogram
+```
+We see from the correlogram that the autocorrelation exceeds the significance bound 3 times but all the others do not exceed
+
+```{R}
+acf(ts_diff1, lag.max=20, plot=FALSE) # get the autocorrelation values
+```
+
+```{r}
+pacf(ts_diff1, lag.max=20)             # plot a partial correlogram
+pacf(ts_diff1, lag.max=20, plot=FALSE) # get the partial autocorrelation values
+```
+
+# Arima, 1,1,1
+
+```{r}
+ts_arima = Arima(ts, order=c(1,1,1),seasonal = list(order = c(1,1,1)))
+ts_arima
+```
+
+
+```{r}
+ts_arima_forecast = forecast(ts_arima,h = 6)
+ts_arima_forecast
+
+forecast:::plot.forecast(ts_arima_forecast)
+```
+## Growth
+```{r}
+
+year_2019_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1][c(1:6),]
+sum_year_2019 = sum(c(year_2019,year_2019_predict_ARIMA))
+growth_ARIMA <- growth(sum_year_2019, sum(year_2018))
+growth_ARIMA 
+
+```
+
+As in the case of exponential smoothing models, it is a good idea to investigate whether the forecast errors of an ARIMA model are normally distributed with mean zero and constant variance, and whether the are correlations between successive forecast errors.
+
+For example, we can make a correlogram of the forecast errors for our ARIMA(0,1,1) model, and perform the Ljung-Box test for lags 1-20, by typing:
+
+```{R}
+acf(ts_arima_forecast$residuals, lag.max=20)
+Box.test(ts_arima_forecast$residuals, lag=20, type="Ljung-Box")
+```
+# we can reject the null hypothesis, it's rather similar to the HW
+```{r}
+plot.ts(ts_arima_forecast$residuals)            # make time plot of forecast errors
+plotForecastErrors(ts_arima_forecast$residuals)
+```
+# Arima, 0,1,0 as given from the loop
+
+```{r}
+ts_arima = Arima(ts, order=c(2,1,1),seasonal = list(order = c(2,1,0)))
+ts_arima
+```
+
+
+```{r}
+ts_arima_forecast = forecast(ts_arima,h = 6)
+ts_arima_forecast
+
+forecast:::plot.forecast(ts_arima_forecast)
+```
+## Growth
+```{r}
+
+year_2019_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1][c(1:6),]
+sum_year_2019 = sum(c(year_2019,year_2019_predict_ARIMA))
+growth_ARIMA2 <- growth(sum_year_2019, sum(year_2018))
+growth_ARIMA2 
+
+```
+
+As in the case of exponential smoothing models, it is a good idea to investigate whether the forecast errors of an ARIMA model are normally distributed with mean zero and constant variance, and whether the are correlations between successive forecast errors.
+
+For example, we can make a correlogram of the forecast errors for our ARIMA(0,1,1) model, and perform the Ljung-Box test for lags 1-20, by typing:
+
+```{R}
+acf(ts_arima_forecast$residuals, lag.max=20)
+Box.test(ts_arima_forecast$residuals, lag=20, type="Ljung-Box")
+```
+# we can reject the null hypothesis, it's rather similar to the HW
+```{r}
+plot.ts(ts_arima_forecast$residuals)            # make time plot of forecast errors
+plotForecastErrors(ts_arima_forecast$residuals)
+```
+
+# A model chosen automatically
+
+```{r}
+
+fit <- auto.arima(ts,max.p = 5,max.q = 5,max.P = 5,max.Q = 5,max.d = 3,seasonal = TRUE)
+fit
+fit_forecast = forecast(fit,h=6)
+plot(fit_forecast)
+# str(fit)
+```
+
+## Growth
+```{r}
+
+
+year_2019_predict_auto.arima <- (as.data.frame(fit_forecast))[1][c(1:6),]
+year_2019_predict_auto.arima_95_low <- (as.data.frame(fit_forecast))[4][c(1:6),]
+year_2019_predict_auto.arima_95_high <- (as.data.frame(fit_forecast))[5][c(1:6),]
+
+sum_year_2019 = sum(c(year_2019,year_2019_predict_auto.arima))
+sum_year_2019_low = sum(c(year_2019,year_2019_predict_auto.arima_95_low))
+sum_year_2019_high = sum(c(year_2019,year_2019_predict_auto.arima_95_high))
+
+
+growth_auto.arima <- -growth(sum(year_2018),sum_year_2019)
+growth_auto.arima_95_low <- -growth(sum(year_2018),sum_year_2019_low)
+growth_auto.arima_95_high <- -growth(sum(year_2018),sum_year_2019_high)
+
+growth_auto.arima
+growth_auto.arima_95_low
+growth_auto.arima_95_high
+```
+
+
+# all the growths
+
+```{r}
+growth_ARIMA
+
+growth_ARIMA2
+
+growth_auto.arima
+
+growth_HW
+
+```
+
+
+```{r include=FALSE}
+df = rbind(growth_ARIMA ,growth_ARIMA2, growth_auto.arima, growth_HW)
+df = as.data.frame(t(df))
+rownames(df) = "nov-19"
+writexl::write_xlsx(df,"total-industry-19.xlsx")
+```

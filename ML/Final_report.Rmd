@@ -1,0 +1,119 @@
+---
+title: "Final_report"
+author: "Kevork Sulahian"
+date: "August 20, 2019"
+output: pdf_document
+---
+
+
+Considering that the prediction for 3 variable model has an accuracy of 93.9% over the companies model which had an accuray of only 90% I've chosen to train the 93.9% linear regression model over the whole data 
+
+
+```{r message=FALSE}
+
+library(readxl)
+library(MASS)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(glmnet)
+library(xgboost)
+
+```
+
+Cleaning the Data
+
+```{r results='hide', message=FALSE}
+
+df <- read_xls('economy.xls', sheet='2011-2019 NACE 2')
+df <- df[c(4,6,11,30,34),]
+
+df <- df[,-c(1,3)]
+
+my_months <- c('JAN','FEB','MARCH','APRIL','MAY','JUNE','JULY','AUG','SEP', 'OCT','NOV','DEC')
+my_years <- c(2011:2019)
+df_months = c()
+j = 0
+for (i in 2:length(df)) {
+  
+  if((i-2)%%12==0) {
+    j = j + 1
+    df_months = c(df_months, paste0(my_years[j], '_', my_months))
+  }
+}
+
+
+df_months = head(df_months,-6)
+
+df <- as.data.frame(t(df))
+cols <- df[1,]
+cols = as.character(unlist(cols))
+df <- df[-c(1),]
+colnames(df) <- as.character(cols)
+rownames(df) <- df_months
+df[] <- sapply(df[],function(x) as.numeric(as.character(x)))
+
+df$`Total industry` = df$`Total industry` * 1000000
+df$`mining and quarrying` = df$`mining and quarrying` * 1000000
+df$manufacturing = df$manufacturing * 1000000
+df$`Electricity, gas, steam and air conditioning supply` = df$`Electricity, gas, steam and air conditioning supply` * 1000000
+df$`Water supply, sewerage, waste management and remediation activites` = df$`Water supply, sewerage, waste management and remediation activites` * 1000000
+
+
+
+```
+
+## T-1 = T
+```{r}
+total = df$`Total industry`
+names = rownames(df)
+df = df[-102,]
+total = total[-1]
+names = names[-1]
+rownames(df) = names
+df$`Total industry`=total
+```
+
+
+```{r}
+
+head(df)
+
+```
+
+```{R}
+fit <- lm(`Total industry`~., df)
+
+pred <- predict(fit,newdata = df)
+
+RMSE(df$`Total industry`, pred)
+
+
+```
+
+```{r echo=FALSE}
+
+difference <- function(x1,x2) {
+  abs(x1-x2)/((x1+x2)/2)
+}
+
+# difference(ridge.pred,test$main)
+
+mean_error <- function(x) {
+  sum(x)/length(x)
+}
+
+```
+
+```{r}
+
+mean_error(difference(pred,df$`Total industry`))
+
+```
+
+
+
+
+
+
