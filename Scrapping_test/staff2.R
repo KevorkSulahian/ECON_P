@@ -111,13 +111,24 @@ data <- data.frame(title = character(), company = character(), employment_type =
 
 get_info <- function(links) {
   for (link in links) {
-    link = read_html(link)
+    print(link)
+    
+    link = tryCatch({
+      link2 = read_html(link)
+      
+      temp <- data.frame(title = get_title(link2), company = get_company(link2), 
+                         emplyment_type = get_employment_type(link2), category =  get_category(link2),
+                         location = get_location(link2), closed_date = get_closed_date(link2), description = get_description(link2))
+      
+      
+    }, 
+    error= function(e){
+      print(link)
+    })
+      
     # link = links[6]
     # link = read_html(link)
     
-    temp <- data.frame(title = get_title(link), company = get_company(link), 
-                       emplyment_type = get_employment_type(link), category =  get_category(link),
-                       location = get_location(link), closed_date = get_closed_date(link), description = get_description(link))
     
     data <- rbind(data,temp)
     
@@ -125,6 +136,6 @@ get_info <- function(links) {
   return(data) 
 }
 
-links = get_links(14)
+links = get_links(11)
 final <- get_info(links)  
 writexl::write_xlsx(final, "staff.xlsx")

@@ -40,12 +40,12 @@ growth <- function(present, past) {
 
 ```
 ```{r}
-library(readxl)
+# library(readxl)
 
 df <- read_xlsx("ts-3.xlsx")
 
 ts = ts(df,start=c(2011,1), frequency = c(12))
-```
+ ```
 
 ```{r echo=FALSE}
 ts.plot(ts)
@@ -115,7 +115,7 @@ plot(ts_forcaste)
 
 
 ```{r}
-ts_forcaste2 = forecast:::forecast.HoltWinters(ts_forcaste, h= 15)
+ts_forcaste2 = forecast:::forecast.HoltWinters(ts_forcaste, h= 14)
 (as.data.frame(ts_forcaste2))[1]
 HW_pred = (as.data.frame(ts_forcaste2))[1]
 HW_pred=HW_pred[3,]
@@ -187,9 +187,9 @@ ts_arima
 
 
 ```{r}
-ts_arima_forecast = forecast(ts_arima,h = 15)
+ts_arima_forecast = forecast(ts_arima,h = 14)
 arima_pred = ts_arima_forecast[4]
-arima_pred = arima_pred$mean[15]
+arima_pred = arima_pred$mean[14]
 forecast:::plot.forecast(ts_arima_forecast)
 ```
 
@@ -217,10 +217,10 @@ plotForecastErrors(ts_arima_forecast$residuals)
 fit3 <- auto.arima(ts, seasonal = T)
 fit3
 
-fit_forecast = forecast(fit3,h=15)
+fit_forecast = forecast(fit3,h=14)
 plot(fit_forecast)
 # str(fit)
-auto.arima_pred = (as.data.frame(fit_forecast))[1][c(15),]
+auto.arima_pred = (as.data.frame(fit_forecast))[1][c(14),]
 ```
 
 

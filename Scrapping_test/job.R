@@ -58,36 +58,38 @@
     get_description <- function(html) {
       html %>%
         html_node(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "job-descr", " " ))]') %>%
-        html_text()
+        html_text() %>%
+        str_replace_all("\n"," ") %>%
+        str_replace_all("\r"," ")
     }
     # test
-    # get_description(html1)
+    # get_description(read_html(links[1]))
     
     get_location <- function(html) {
       html %>%
-        html_node(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "col-md-6", " " )) and (((count(preceding-sibling::*) + 1) = 2) and parent::*)]//*[contains(concat( " ", @class, " " ), concat( " ", "text-muted", " " ))]') %>%
+        html_node(xpath = '/html/body/section/div/div/div/div[2]/div[1]/div/div/div[1]/div[2]/p/span[2]') %>%
         html_text() %>%
         unlist() 
     }
     #test
-    # get_location(html1)
+    # get_location(read_html(links[1]))
     
     
     get_closed_date <- function(html) {
       html %>%
-        html_node(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "col-md-6", " " )) and (((count(preceding-sibling::*) + 1) = 4) and parent::*)]//*[contains(concat( " ", @class, " " ), concat( " ", "text-muted", " " ))]') %>%
+        html_node(xpath = '/html/body/section/div/div/div/div[2]/div[1]/div/div/div[1]/div[4]/p/span[2]') %>%
         html_text()
     }
     
-    # get_closed_date(html1)
+    # get_closed_date(read_html(links[1]))
     
     get_employment_type <- function(html) {
       html %>%
-        html_node(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "col-md-6", " " )) and (((count(preceding-sibling::*) + 1) = 3) and parent::*)]//*[contains(concat( " ", @class, " " ), concat( " ", "text-muted", " " ))]') %>%
+        html_node(xpath = '/html/body/section/div/div/div/div[2]/div[1]/div/div/div[1]/div[3]/p/span[2]') %>%
         html_text()
     }
     
-    # get_employment_type(html1)
+    # get_employment_type(read_html(links[1]))
     
     data <- data.frame(title = character(), company = character(), category = character(),
                        description = character(),
@@ -127,6 +129,6 @@
     return(data)
   }
   
-  final_data <- get_full_data(7)
+  final_data <- get_full_data(4)
   
   writexl::write_xlsx(final_data, "job.xlsx")

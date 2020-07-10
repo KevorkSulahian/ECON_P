@@ -53,7 +53,7 @@ df = df[-1]
 df = t(df)
 df[] <- sapply(df[],function(x) as.numeric(as.character(x)))
 df = as.numeric(df)
-df= df * 1000000
+# df= df * 1000000
 ts = ts(df, start = c(2011,1), frequency = c(12))
 ```
 
@@ -68,7 +68,7 @@ In this case, it appears that an additive model is not appropriate for describin
 ```{r}
 
 log_ts <- log(ts)
- plot.ts(log_ts)
+plot.ts(log_ts)
 
 ```
 
@@ -124,7 +124,7 @@ plot(ts_forcaste)
 
 
 ```{r}
-ts_forcaste2 = forecast:::forecast.HoltWinters(ts_forcaste, h= 18)
+ts_forcaste2 = forecast:::forecast.HoltWinters(ts_forcaste, h= 14)
 (as.data.frame(ts_forcaste2))[1]
 ```
 
@@ -135,9 +135,9 @@ forecast:::plot.forecast(ts_forcaste2)
 ## Growth
 ```{r}
 year_2019 <- window(ts, 2019)
-year_2019_predict_HW <- (as.data.frame(ts_forcaste2))[1][c(1:6),]
+year_2019_predict_HW <- (as.data.frame(ts_forcaste2))[1][c(1:2),]
 sum_year_2019 = sum(c(year_2019,year_2019_predict_HW))
-year_2020 = (as.data.frame(ts_forcaste2))[1][c(7:18),]
+year_2020 = (as.data.frame(ts_forcaste2))[1][c(3:14),]
 growth_HW <- growth(sum(year_2020),sum_year_2019)
 growth_HW 
 ```
@@ -205,7 +205,7 @@ ts_arima
 
 
 ```{r}
-ts_arima_forecast = forecast(ts_arima,h = 18)
+ts_arima_forecast = forecast(ts_arima,h = 14)
 ts_arima_forecast
 
 forecast:::plot.forecast(ts_arima_forecast)
@@ -214,15 +214,12 @@ forecast:::plot.forecast(ts_arima_forecast)
 ```{r}
 this_year_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1]
 
-# growth_ARIMA <- growth(sum(c(this_year,as.numeric(this_year_predict_ARIMA$`Point Forecast`))), sum(last_year))
-# growth_ARIMA
 
-
-year_2019_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1][c(1:6),]
+year_2019_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1][c(1:2),]
 sum_year_2019 = sum(c(year_2019,year_2019_predict_ARIMA))
-year_2020 = (as.data.frame(ts_arima_forecast))[1][c(7:18),]
+year_2020 = (as.data.frame(ts_arima_forecast))[1][c(3:14),]
 growth_ARIMA <- growth(sum_year_2019, sum(year_2020))
--growth_ARIMA 
+growth_ARIMA=-growth_ARIMA 
 
 ```
 
@@ -248,7 +245,7 @@ ts_arima
 
 
 ```{r}
-ts_arima_forecast = forecast(ts_arima,h = 18)
+ts_arima_forecast = forecast(ts_arima,h = 14)
 ts_arima_forecast
 
 forecast:::plot.forecast(ts_arima_forecast)
@@ -258,11 +255,11 @@ forecast:::plot.forecast(ts_arima_forecast)
 
 this_year_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1]
 
-year_2019_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1][c(1:6),]
+year_2019_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1][c(1:2),]
 sum_year_2019 = sum(c(year_2019,year_2019_predict_ARIMA))
-year_2020 = (as.data.frame(ts_arima_forecast))[1][c(7:18),]
-growth_ARIMA2 <- growth(sum_year_2019, sum(year_2020))
--growth_ARIMA2 
+year_2020 = (as.data.frame(ts_arima_forecast))[1][c(3:14),]
+growth_ARIMA2 <- growth(sum(year_2020),sum_year_2019)
+growth_ARIMA2 
 
 ```
 
@@ -286,7 +283,7 @@ plotForecastErrors(ts_arima_forecast$residuals)
 
 fit <- auto.arima(ts,max.p = 5,max.q = 5,max.P = 5,max.Q = 5,max.d = 3,seasonal = TRUE)
 fit
-fit_forecast = forecast(fit,h=18)
+fit_forecast = forecast(fit,h=14)
 plot(fit_forecast)
 # str(fit)
 ```
@@ -295,18 +292,18 @@ plot(fit_forecast)
 ```{r}
 
 
-year_2019_predict_auto.arima <- (as.data.frame(fit_forecast))[1][c(1:6),]
-year_2019_predict_auto.arima_95_low <- (as.data.frame(fit_forecast))[4][c(1:6),]
-year_2019_predict_auto.arima_95_high <- (as.data.frame(fit_forecast))[5][c(1:6),]
+year_2019_predict_auto.arima <- (as.data.frame(fit_forecast))[1][c(1:2),]
+year_2019_predict_auto.arima_95_low <- (as.data.frame(fit_forecast))[4][c(1:2),]
+year_2019_predict_auto.arima_95_high <- (as.data.frame(fit_forecast))[5][c(1:2),]
 
 sum_year_2019 = sum(c(year_2019,year_2019_predict_auto.arima))
 sum_year_2019_low = sum(c(year_2019,year_2019_predict_auto.arima_95_low))
 sum_year_2019_high = sum(c(year_2019,year_2019_predict_auto.arima_95_high))
 
 
-year_2020_predict_auto.arima <- (as.data.frame(fit_forecast))[1][c(7:18),]
-year_2020_predict_auto.arima_95_low <- (as.data.frame(fit_forecast))[4][c(7:18),]
-year_2020_predict_auto.arima_95_high <- (as.data.frame(fit_forecast))[5][c(7:18),]
+year_2020_predict_auto.arima <- (as.data.frame(fit_forecast))[1][c(3:14),]
+year_2020_predict_auto.arima_95_low <- (as.data.frame(fit_forecast))[4][c(3:14),]
+year_2020_predict_auto.arima_95_high <- (as.data.frame(fit_forecast))[5][c(3:14),]
 
 growth_auto.arima <- growth(sum(year_2020_predict_auto.arima),sum_year_2019)
 growth_auto.arima_95_low <- growth(sum(year_2020_predict_auto.arima_95_low),sum_year_2019_low)
@@ -321,13 +318,13 @@ growth_auto.arima_95_high
 # all the growths
 
 ```{r}
-growth_ARIMA =  -growth_ARIMA
-
-growth_ARIMA2 = -growth_ARIMA2
-
-growth_auto.arima
-
-growth_HW
+# growth_ARIMA =  -growth_ARIMA
+# 
+# growth_ARIMA2 = -growth_ARIMA2
+# 
+# growth_auto.arima
+# 
+# growth_HW
 
 ```
 
@@ -336,5 +333,6 @@ growth_HW
 df = rbind(growth_ARIMA ,growth_ARIMA2, growth_auto.arima, growth_HW)
 df = as.data.frame(t(df))
 rownames(df) = "nov-19"
+colnames(df) <- c("arima (1,1,1), (1,1,1)", "arima (2,1,1), (2,1,0)", "auto.arima (2,0,0), (0,1,0)", "HW")
 writexl::write_xlsx(df,"total-industry-20.xlsx")
 ```

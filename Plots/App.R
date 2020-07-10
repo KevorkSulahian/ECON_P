@@ -47,6 +47,7 @@ runApp(
         df$Growth <- as.numeric(df$Growth)
         
         
+        
         df$Price <- round(as.numeric(df$Price),1)
         return(df)
       })

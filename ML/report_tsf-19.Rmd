@@ -49,7 +49,7 @@ df <- read_xls('economy.xls', sheet='2011-2019 NACE 2')
 df = df[4,]
 df = df[-c(1,3)]
 rownames(df) = df[1]
-df = df[-1]
+# df = df[-1]
 df = t(df)
 df[] <- sapply(df[],function(x) as.numeric(as.character(x)))
 df = as.numeric(df)

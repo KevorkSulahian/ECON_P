@@ -102,17 +102,10 @@ get_data <- function() {
   #test
   # get_salary(link)
   
-  get_closed_date <- function(html) {
-    html %>%
-      html_node(xpath = '//*[@id="loyal"]/div[1]/div[2]/div[1]/div[2]/text()[2]') %>%
-      html_text()
-  }
-  # get_closed_date(link)
-  
   
   data <- data.frame(title = character(), company = character(), employment_type = character(), category = character(),
                      experience = integer(), education = character(),
-                     salary = character(), close_date = numeric())
+                     salary = character())
   
   get_info <- function(links) {
     for (linko in links) {
@@ -124,8 +117,7 @@ get_data <- function() {
       temp <- data.frame(title = get_title(link), company = get_company(link), 
                          emplyment_type = get_employment_type(link), category =  get_title(link),
                          experience = get_experience(link), education =  get_education(link), 
-                         salary = get_salary(link),
-                         closed_date = get_closed_date(link))
+                         salary = get_salary(link))
       
       data <- rbind(data,temp)
       

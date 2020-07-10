@@ -1,0 +1,140 @@
+---
+title: "RMarkdownFile"
+author: "Kevork Sulahian"
+date: "December 23, 2019"
+output: html_document
+---
+
+
+```{r}
+library(readxl)
+library(forecast)
+```
+```{r echo=FALSE}
+
+plotForecastErrors <- function(forecasterrors)
+{
+  # make a histogram of the forecast errors:
+  mybinsize <- IQR(forecasterrors,na.rm = T)/4
+  mysd   <- sd(forecasterrors, na.rm = T)
+  mymin  <- min(forecasterrors,na.rm = T) - mysd*5
+  mymax  <- max(forecasterrors, na.rm = T) + mysd*3
+  # generate normally distributed data with mean 0 and standard deviation mysd
+  mynorm <- rnorm(10000, mean=0, sd=mysd)
+  mymin2 <- min(mynorm)
+  mymax2 <- max(mynorm)
+  if (mymin2 < mymin) { mymin <- mymin2 }
+  if (mymax2 > mymax) { mymax <- mymax2 }
+  # make a red histogram of the forecast errors, with the normally distributed data overlaid:
+  mybins <- seq(mymin, mymax, mybinsize)
+  hist(forecasterrors, col="red", freq=FALSE, breaks=mybins)
+  # freq=FALSE ensures the area under the histogram = 1
+  # generate normally distributed data with mean 0 and standard deviation mysd
+  myhist <- hist(mynorm, plot=FALSE)
+  # plot the normal curve as a blue line on top of the histogram of forecast errors:
+  points(myhist$mids, myhist$density, type="l", col="blue", lwd=2)
+}
+
+growth <- function(present, past) {
+  (present - past) / past
+}
+
+```
+```{r}
+library(tidyverse)
+df <- read_xlsx("tsf.xlsx")
+
+df = df[,6]
+df <- df %>% map_df(rev)
+# df <- as.numeric(df)
+ts = ts(df,start=c(2009), frequency = c(1))
+```
+
+```{r echo=FALSE}
+ts.plot(ts)
+
+```
+
+In this case, it appears that an additive model is not appropriate for describing this time series, since the size of the seasonal fluctuations and random fluctuations seem to increase with the level of the time series. Thus, we may need to transform the time series in order to get a transformed time series that can be described using an additive model. For example, we can transform the time series by calculating the natural log of the original data:
+
+```{r}
+log_ts <- log(ts)
+plot.ts(log_ts)
+
+```
+
+
+##Decomposing Time Series
+
+Decomposing a time series means separating it into its constituent components, which are usually a trend component and an irregular component, and if it is a seasonal time series, a seasonal component.
+
+###Decomposing Non-Seasonal Data
+
+A non-seasonal time series consists of a trend component and an irregular component. Decomposing the time series involves trying to separate the time series into these components, that is, estimating the the trend component and the irregular component.
+
+To estimate the trend component of a non-seasonal time series that can be described using an additive model, it is common to use a smoothing method, such as calculating the simple moving average of the time series.
+
+Thus, we can try to estimate the trend component of this time series by smoothing using a simple moving average. To smooth the time series using a simple moving average of order 3, and plot the smoothed time series data, we type:
+```{r}
+
+library("TTR")
+ts_components <- SMA(ts,n=3)
+plot(ts_components)
+```
+
+
+```{r}
+ts_diff1 <-  diff(ts, differences = 2)
+
+plot.ts(ts_diff1)
+```
+The time series of differences (above) does appear to be stationary in mean and variance, as the level of the series stays roughly constant over time, and the variance of the series appears roughly constant over time
+
+
+```{r}
+
+acf(ts_diff1, lag.max=20)             # plot a correlogram
+```
+We see from the correlogram that the autocorrelation exceeds the significance bound 3 times but all the others do not exceed
+
+```{R}
+acf(ts_diff1, lag.max=20, plot=FALSE) # get the autocorrelation values
+```
+
+```{r}
+pacf(ts_diff1, lag.max=20)             # plot a partial correlogram
+pacf(ts_diff1, lag.max=20, plot=FALSE) # get the partial autocorrelation values
+```
+
+# Arima, 0,1,0
+
+```{r}
+ts_arima = Arima(ts, order=c(1,2,0))
+ts_arima
+```
+
+
+```{r}
+ts_arima_forecast = forecast(ts_arima,h = 1)
+ts_arima_forecast
+
+forecast:::plot.forecast(ts_arima_forecast)
+```
+
+## Growth
+```{r}
+
+this_year_predict_ARIMA <- as.numeric(as.data.frame(ts_arima_forecast))[1]
+
+growth_ARIMA <- growth(this_year_predict_ARIMA, ts[11])
+growth_ARIMA 
+
+ ```
+As in the case of exponential smoothing models, it is a good idea to investigate whether the forecast errors of an ARIMA model are normally distributed with mean zero and constant variance, and whether the are correlations between successive forecast errors.
+
+
+
+```{r}
+plot.ts(ts_arima_forecast$residuals)            # make time plot of forecast errors
+plotForecastErrors(ts_arima_forecast$residuals)
+```

@@ -48,7 +48,7 @@ df = df[-c(1,2)]
 
 df2 = read_xlsx('export_19xlsx.xlsx')
 df = t(df)
-df2$...1 = c(paste0(2019,"-",1:10))
+df2$...1 = c(paste0(2019,"-",1:11))
 rownames(df2) =df2$...1
 df2$...1 = NULL
 colnames(df2) = "V1"
@@ -125,7 +125,7 @@ plot(ts_forcaste)
 
 
 ```{r}
-ts_forcaste2 = forecast:::forecast.HoltWinters(ts_forcaste, h= 2)
+ts_forcaste2 = forecast:::forecast.HoltWinters(ts_forcaste, h= 1)
 (as.data.frame(ts_forcaste2))[1]
 ```
 
@@ -138,7 +138,7 @@ forecast:::plot.forecast(ts_forcaste2)
 ```{r}
 year_2018 <- window(ts,2018, c(2018,12))
 year_2019 <- window(ts, 2019)
-year_2019_predict_HW <- (as.data.frame(ts_forcaste2))[1][c(1:2),]
+year_2019_predict_HW <- (as.data.frame(ts_forcaste2))[1][c(1),]
 sum_year_2019 = sum(c(year_2019,year_2019_predict_HW))
 growth_HW <- growth(sum_year_2019,sum(year_2018))
 growth_HW 
@@ -203,7 +203,7 @@ ts_arima
 
 
 ```{r}
-ts_arima_forecast = forecast(ts_arima,h = 2)
+ts_arima_forecast = forecast(ts_arima,h = 1 )
 ts_arima_forecast
 
 forecast:::plot.forecast(ts_arima_forecast)
@@ -213,7 +213,7 @@ forecast:::plot.forecast(ts_arima_forecast)
 ```{r}
 
 this_year_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1]
-year_2019_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1][c(1:2),]
+year_2019_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1][c(1),]
 sum_year_2019 = sum(c(year_2019,year_2019_predict_ARIMA))
 growth_ARIMA <- growth(sum_year_2019,sum(year_2018))
 growth_ARIMA 
@@ -242,7 +242,7 @@ plotForecastErrors(ts_arima_forecast$residuals)
 fit3 <- auto.arima(ts)
 fit3
 
-fit_forecast = forecast(fit3,h=2)
+fit_forecast = forecast(fit3,h=1)
 plot(fit_forecast)
 # str(fit)
 ```
@@ -250,22 +250,22 @@ plot(fit_forecast)
 ## Growth
 ```{r}
 
-year_2019_predict_auto.arima <- (as.data.frame(fit_forecast))[1][c(1:2),]
-year_2019_predict_auto.arima_95_low <- (as.data.frame(fit_forecast))[4][c(1:2),]
-year_2019_predict_auto.arima_95_high <- (as.data.frame(fit_forecast))[5][c(1:2),]
+year_2019_predict_auto.arima <- (as.data.frame(fit_forecast))[1][c(1),]
+# year_2019_predict_auto.arima_95_low <- (as.data.frame(fit_forecast))[4][c(1:2),]
+# year_2019_predict_auto.arima_95_high <- (as.data.frame(fit_forecast))[5][c(1:2),]
 
 sum_year_2019 = sum(c(year_2019,year_2019_predict_auto.arima))
-sum_year_2019_low = sum(c(year_2019,year_2019_predict_auto.arima_95_low))
-sum_year_2019_high = sum(c(year_2019,year_2019_predict_auto.arima_95_high))
+# sum_year_2019_low = sum(c(year_2019,year_2019_predict_auto.arima_95_low))
+# sum_year_2019_high = sum(c(year_2019,year_2019_predict_auto.arima_95_high))
 
 
 growth_auto.arima <- -growth(sum(year_2018),sum_year_2019)
-growth_auto.arima_95_low <- -growth(sum(year_2018),sum_year_2019_low)
-growth_auto.arima_95_high <- -growth(sum(year_2018),sum_year_2019_high)
+# growth_auto.arima_95_low <- -growth(sum(year_2018),sum_year_2019_low)
+# growth_auto.arima_95_high <- -growth(sum(year_2018),sum_year_2019_high)
 
 growth_auto.arima
-growth_auto.arima_95_low
-growth_auto.arima_95_high
+# growth_auto.arima_95_low
+# growth_auto.arima_95_high
 
 ```
 

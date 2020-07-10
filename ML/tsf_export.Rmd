@@ -48,7 +48,7 @@ df = df[-c(1,2)]
 
 df2 = read_xlsx('export_19xlsx.xlsx')
 df = t(df)
-df2$...1 = c(paste0(2019,"-",1:9))
+# df2$...1 = c(paste0(2019,"-",1:12))
 rownames(df2) =df2$...1
 df2$...1 = NULL
 colnames(df2) = "V1"
@@ -109,6 +109,8 @@ plot(ts_seasonall)
 ```{R}
 ts_forcaste <- HoltWinters(ts)
 ts_forcaste
+
+
 #
 ```
 
@@ -120,12 +122,12 @@ ts_forcaste$SSE
 ```
 
 ```{r echo = FALSE}
-plot(ts_forcaste)
+plot(forecast(ts_forcaste))
 ```
 
 
 ```{r}
-ts_forcaste2 = forecast:::forecast.HoltWinters(ts_forcaste, h= 15)
+ts_forcaste2 = forecast:::forecast.HoltWinters(ts_forcaste, h= 11)
 (as.data.frame(ts_forcaste2))[1]
 ```
 
@@ -136,12 +138,12 @@ forecast:::plot.forecast(ts_forcaste2)
 ## Growth
 
 ```{r}
-year_2019 <- window(ts, 2019)
-year_2019_predict_HW <- (as.data.frame(ts_forcaste2))[1][c(1:3),]
-sum_year_2019 = sum(c(year_2019,year_2019_predict_HW))
-year_2020 = (as.data.frame(ts_forcaste2))[1][c(4:15),]
-growth_HW <- growth(sum(year_2020),sum_year_2019)
-growth_HW 
+year_2019 <- window(ts, 2019,c(2019,12))
+sum_year_2019 = sum(c(year_2019))
+year_2020 = (as.data.frame(ts_forcaste2))[1][c(1:11),]
+sum_year_2020_HW <-sum(c(year_2020),window(ts, 2020))
+growth_HW <- growth(sum_year_2020_HW,sum_year_2019)
+growth_HW
 ```
 
 We can investigate whether the predictive model can be improved upon by checking whether the in-sample forecast errors show non-zero autocorrelations at lags 1-20, by making a correlogram and carrying out the Ljung-Box test:
@@ -162,7 +164,7 @@ plot.ts(ts_forcaste2$residuals)
 
 
 ```{r }
-plotForecastErrors(ts_forcaste2$residuals)
+# plotForecastErrors(ts_forcaste2$residuals)
 ```
 From the time plot, it appears plausible that the forecast errors have constant variance over time. From the histogram of forecast errors, it seems plausible that the forecast errors are normally distributed with mean zero.
 
@@ -197,13 +199,13 @@ pacf(ts_diff1, lag.max=20, plot=FALSE) # get the partial autocorrelation values
 # Arima, 0,1,0
 
 ```{r}
-ts_arima = Arima(ts, order=c(0,1,0),seasonal = list(order = c(0,1,0)))
+ts_arima = Arima(ts, order=c(1,1,1),seasonal = list(order = c(1,1,1)))
 ts_arima
 ```
 
 
 ```{r}
-ts_arima_forecast = forecast(ts_arima,h = 15)
+ts_arima_forecast = forecast(ts_arima,h = 11)
 ts_arima_forecast
 
 forecast:::plot.forecast(ts_arima_forecast)
@@ -212,17 +214,18 @@ forecast:::plot.forecast(ts_arima_forecast)
 ## Growth
 ```{r}
 
-this_year_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1]
+# this_year_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1]
 
 # growth_ARIMA <- growth(sum(c(this_year,as.numeric(this_year_predict_ARIMA$`Point Forecast`))), sum(last_year))
 # growth_ARIMA
 
 
-year_2019_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1][c(1:3),]
-sum_year_2019 = sum(c(year_2019,year_2019_predict_ARIMA))
-year_2020 = (as.data.frame(ts_arima_forecast))[1][c(4:15),]
-growth_ARIMA <- growth(sum_year_2019, sum(year_2020))
--growth_ARIMA 
+# year_2019_predict_ARIMA <- (as.data.frame(ts_arima_forecast))[1][c(1),]
+# sum_year_2019 = sum(c(year_2019))
+year_2020 = (as.data.frame(ts_arima_forecast))[1][c(1:11),]
+sum_year_2020_ARIMA = sum(c(year_2020,window(ts,2020)))
+growth_ARIMA <- growth(sum_year_2020_ARIMA,sum_year_2019)
+growth_ARIMA 
 
  ```
 As in the case of exponential smoothing models, it is a good idea to investigate whether the forecast errors of an ARIMA model are normally distributed with mean zero and constant variance, and whether the are correlations between successive forecast errors.
@@ -248,48 +251,49 @@ plotForecastErrors(ts_arima_forecast$residuals)
 fit3 <- auto.arima(ts)
 fit3
 
-fit_forecast = forecast(fit3,h=15)
+fit_forecast = forecast(fit3,h=11)
 plot(fit_forecast)
 # str(fit)
 ```
 
 ## Growth
 ```{r}
-year_2019 <- window(ts, 2019)
-year_2019_predict_HW <- (as.data.frame(ts_forcaste2))[1][c(1:3),]
-sum_year_2019 = sum(c(year_2019,year_2019_predict_HW))
-year_2020 = (as.data.frame(ts_forcaste2))[1][c(4:15),]
-growth_HW <- growth(sum(year_2020),sum_year_2019)
-growth_HW 
-
-year_2019_predict_auto.arima <- (as.data.frame(fit_forecast))[1][c(1:3),]
-year_2019_predict_auto.arima_95_low <- (as.data.frame(fit_forecast))[4][c(1:3),]
-year_2019_predict_auto.arima_95_high <- (as.data.frame(fit_forecast))[5][c(1:3),]
-
-sum_year_2019 = sum(c(year_2019,year_2019_predict_auto.arima))
-sum_year_2019_low = sum(c(year_2019,year_2019_predict_auto.arima_95_low))
-sum_year_2019_high = sum(c(year_2019,year_2019_predict_auto.arima_95_high))
+# year_2019 <- window(ts, 2019)
+# year_2019_predict_HW <- (as.data.frame(ts_forcaste2))[1][c(1),]
+# sum_year_2019 = sum(c(year_2019))
+# year_2020 = (as.data.frame(ts_forcaste2))[1][c(2:13),]
 
 
-year_2020_predict_auto.arima <- (as.data.frame(fit_forecast))[1][c(4:15),]
-year_2020_predict_auto.arima_95_low <- (as.data.frame(fit_forecast))[4][c(4:15),]
-year_2020_predict_auto.arima_95_high <- (as.data.frame(fit_forecast))[5][c(4:15),]
+# year_2019_predict_auto.arima <- (as.data.frame(fit_forecast))[1][c(1),]
+# year_2019_predict_auto.arima_95_low <- (as.data.frame(fit_forecast))[4][c(1),]
+# year_2019_predict_auto.arima_95_high <- (as.data.frame(fit_forecast))[5][c(1),]
 
-growth_auto.arima <- growth(sum(year_2020_predict_auto.arima),sum_year_2019)
-growth_auto.arima_95_low <- growth(sum(year_2020_predict_auto.arima_95_low),sum_year_2019_low)
-growth_auto.arima_95_high <- growth(sum(year_2020_predict_auto.arima_95_high),sum_year_2019_high)
+# sum_year_2019 = sum(c(year_2019))
+# sum_year_2019_low = sum(c(year_2019,year_2019_predict_auto.arima_95_low))
+# sum_year_2019_high = sum(c(year_2019,year_2019_predict_auto.arima_95_high))
+
+
+year_2020_predict_auto.arima <- (as.data.frame(fit_forecast))[1][c(1:11),]
+# year_2020_predict_auto.arima_95_low <- (as.data.frame(fit_forecast))[4][c(2:13),]
+# year_2020_predict_auto.arima_95_high <- (as.data.frame(fit_forecast))[5][c(2:13),]
+
+sum_year_2020_auto.ARIMA = sum(c(year_2020_predict_auto.arima,window(ts,2020)))
+
+growth_auto.arima <- growth(sum_year_2020_auto.ARIMA,sum_year_2019)
+# growth_auto.arima_95_low <- growth(sum(year_2020_predict_auto.arima_95_low),sum_year_2019_low)
+# growth_auto.arima_95_high <- growth(sum(year_2020_predict_auto.arima_95_high),sum_year_2019_high)
 
 growth_auto.arima
-growth_auto.arima_95_low
-growth_auto.arima_95_high
+# growth_auto.arima_95_low
+# growth_auto.arima_95_high
 ```
 
 
-
+  
 
 
 ```{r include=FALSE}
-df = rbind(growth_ARIMA, growth_auto.arima, growth_HW)
+df = rbind(growth_ARIMA, growth_auto.arima,growth_HW)
 df = as.data.frame(t(df))
 rownames(df) = "prediction for 2020"
 writexl::write_xlsx(df,"export_total-20.xlsx")
