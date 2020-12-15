@@ -2,16 +2,28 @@ library(dplyr)
 library(rvest)
 library(stringr)
 library(XML)
-
+library(RSelenium)
+library(rvest)
+library(tidyverse)
 first_website <- function() {
-  url <- "http://www.jobfinder.am/"
+  
 
-  html <- read_html(url)
+  
+  
+  rD <- RSelenium::rsDriver(browser="firefox", port=7056L, verbose=F)
+  remDr <- rD[["client"]]
+  # 
+  url <- "http://www.jobfinder.am/"
+  remDr$navigate(url)
+  Sys.sleep(5)
+  html <- remDr$getPageSource()[[1]]
+# 
+  html <- read_html(html)
 
   ## start from here i guess
   get_new_links <- function(html) {
     html %>%
-      html_nodes(xpath = '//*[(@id = "ctl00_bdyPlaceHolde_grdJobs_JFTabContainer_JFJobs_grdResultView")]//a[(((count(preceding-sibling::*) + 1) = 5) and parent::*)]') %>%
+      html_nodes(xpath = '/html/body/form/table/tbody/tr/td[2]/table/tbody/tr[2]/td/div/table[2]/tbody/tr/td[2]/div/table/tbody/tr[3]/td/div/div[2]/div[1]/div/table/tbody/tr/td[1]/table/tbody/tr/td/a[2]') %>%
       html_attr(name = "href")
   }
 
@@ -20,7 +32,7 @@ first_website <- function() {
 
   get_links<- function(html) {
     html %>%
-      html_nodes(xpath = '//*[(@id = "ctl00_bdyPlaceHolde_grdJobs_JFTabContainer_JFJobs_grdResultView")]//a[(((count(preceding-sibling::*) + 1) = 4) and parent::*)]') %>%
+      html_nodes(xpath = '/html/body/form/table/tbody/tr/td[2]/table/tbody/tr/td/div/table[2]/tbody/tr/td[2]/div/table/tbody/tr/td/div/div/div/div/table/tbody/tr/td/table/tbody/tr/td/a[2]') %>%
       html_attr(name = "href")
   }
 
@@ -31,7 +43,6 @@ first_website <- function() {
   # link1 <- links[1]
 
   links <- c(new_links, links)
-  # link <- read_html(links[1])
 
   get_title <- function(html) {
     html %>%
@@ -40,7 +51,7 @@ first_website <- function() {
       unlist()
   }
   #test
-  # get_title(read_html(link))
+  get_title(read_html(links[1]))
 
   get_company <- function(html) {
     html %>%
@@ -49,7 +60,7 @@ first_website <- function() {
       unlist()
   }
   # test
-  # get_company(read_html(link))
+  get_company(read_html(links[1]))
 
   get_employment_type <- function(html) {
     html %>%
@@ -136,10 +147,10 @@ first_website <- function() {
 
   get_info <- function(links) {
     for (link in links) {
-      # download.file(link, destfile = "scrapedpage.html", quiet=TRUE)
-      # link <- read_html("scrapedpage.html")
+      download.file(link, destfile = "scrapedpage.html", quiet=TRUE)
+      link <- read_html("scrapedpage.html")
 
-      link = read_html(link)
+      # link = read_html("scrapedpage.html")
 
       temp <- data.frame(title = get_title(link), company = get_company(link),
                          emplyment_type = get_employment_type(link), category =  get_category(link),
@@ -155,10 +166,17 @@ first_website <- function() {
     return(data)
   }
   final <- get_info(links)
+  
+  remDr$close()
+  rD$server$stop()
+  rm(rD)
+  gc()
+  
   return(final)
 }
 
 data <- first_website()
 
-writexl::write_xlsx(data, "jobfinder.xlsx")
+data <- unique(data)
 
+writexl::write_xlsx(data, "jobfinder.xlsx")

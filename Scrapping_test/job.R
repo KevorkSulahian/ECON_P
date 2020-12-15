@@ -100,7 +100,7 @@
         link = read_html(link)
         
         temp <- data.frame(title = get_title(link), company = get_company(link), 
-                           category =  get_category(link), #salary = get_salary(link),
+                           category =  get_category(link),
                            description =  get_description(link),
                            location = get_location(link),
                            closed_date = get_closed_date(link),
@@ -129,6 +129,6 @@
     return(data)
   }
   
-  final_data <- get_full_data(4)
+  final_data <- get_full_data(5)
   
   writexl::write_xlsx(final_data, "job.xlsx")

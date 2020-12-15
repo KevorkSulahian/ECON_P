@@ -1,5 +1,5 @@
 library(dplyr)
-library(rvest)   
+library(rvest)
 library(stringr)
 library(XML)
 
@@ -54,19 +54,19 @@ data <- data.frame(title = character(), location = character(), description = ch
 get_info <- function(links) {
   for (link in links) {
     link = read_html(link)
-    
+
     temp <- data.frame(title = get_title(link),
                        location = get_location(link),
                        description =get_description(link))
-    
+
     data <- rbind(data,temp)
-    
+
   }
-  
+
   return(data)
 }
 
-links<- get_links(51)
+links<- get_links(7)
 
 links<- unique(links)
 

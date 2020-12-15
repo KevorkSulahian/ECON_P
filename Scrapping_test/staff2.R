@@ -20,7 +20,7 @@ get_title <- function(html) {
 
 get_company <- function(html) {
   html %>%
-    html_node(xpath = '/html/body/div[2]/div[3]/div[3]/div[2]/div/a/h1') %>%
+    html_node(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "job_company_title", " " ))]') %>%
     html_text() %>%
     unlist()
 }
@@ -136,6 +136,6 @@ get_info <- function(links) {
   return(data) 
 }
 
-links = get_links(11)
+links = get_links(13)
 final <- get_info(links)  
 writexl::write_xlsx(final, "staff.xlsx")

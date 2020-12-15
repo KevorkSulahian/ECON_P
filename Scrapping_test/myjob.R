@@ -22,7 +22,7 @@
     
     get_title <- function(html) {
       html %>%
-        html_node(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "fullJobTextLong", " " )) and (((count(preceding-sibling::*) + 1) = 3) and parent::*)]') %>%
+        html_node(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "fullJobPosition", " " ))]') %>%
         html_text() %>%
         unlist()
     }
@@ -31,7 +31,7 @@
     
     get_company <- function(html) {
       html %>%
-        html_node(xpath = '//*[@id="MainContentPlaceHolder_jobContainer"]/div[1]') %>%
+        html_node(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "fullJobTextLong", " " )) and (((count(preceding-sibling::*) + 1) = 3) and parent::*)]') %>%
         html_text() %>%
         unlist()
     }
@@ -68,7 +68,7 @@
     
     get_closed_date <- function(html) {
       html %>%
-        html_node(xpath = '//*[@id="MainContentPlaceHolder_jobContainer"]/div[5]/div[3]') %>%
+        html_node(xpath = '//*+[contains(concat( " ", @class, " " ), concat( " ", "fullJobTextShortMiddle", " " ))]//div') %>%
         html_text()
     }
     

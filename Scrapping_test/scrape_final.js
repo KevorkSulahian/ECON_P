@@ -1,4 +1,4 @@
-var url ='https://www.staff.am/en/jobs?page=11&per-page=50';
+var url ='https://www.staff.am/en/jobs?page=13&per-page=50';
 var page = new WebPage()
 var fs = require('fs');
 
