@@ -52,10 +52,10 @@ gdp_quarter <- tabPanel("Quarter",
                                  fluidRow(
                                    column(width=4,
                                           selectInput(inputId = "gdp_quarter_year",label="Choose year",
-                                                      choices= c("2019","2018","2017","2016","2015",
+                                                      choices= c("2020", "2019","2018","2017","2016","2015",
                                                                  "2014","2013","2012","2011","2010",
                                                                  "2009","2008","2007","2006","2005",
-                                                                 "2004","2003","2002", "2001"),multiple = TRUE,selected = "2019"))
+                                                                 "2004","2003","2002", "2001"),multiple = TRUE,selected = "2020"))
                                  )),
                         fluidRow(column(DTOutput("mytable3_quarter"), width = 12, offset=0)),
                         
@@ -86,7 +86,7 @@ gdp_yearly <- tabPanel("Yearly",
                                                                 "2014","2013","2012","2011","2010",
                                                                 "2009","2008","2007","2006","2005",
                                                                 "2004","2003","2002", "2001")
-                                                     ,multiple = TRUE,selected = "2018"))
+                                                     ,multiple = TRUE,selected = "2019"))
                                 )
                        ),
                        fluidRow(column(DTOutput("mytable3_yearly"), width = 12, offset=0)),
@@ -113,7 +113,7 @@ Export_Monthly <- tabPanel("Monthly",
                                                                     "Dollars" = 1),
                                                         multiple = T,selected = 1)),
                              column(width=4,selectInput(inputId = "import_export_month",label="Choose month",
-                                                        choices=  c(11:1),
+                                                        choices=  c(12:1),
                                                         multiple = T,selected = 11))
                            ),
                            fluidRow(

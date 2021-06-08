@@ -42,6 +42,7 @@ growth <- function(present, past) {
 ```{r}
 # library(readxl)
 
+
 df <- read_xlsx("Export_for_TS.xlsx")
 df = df[1,]
 df = df[-c(1,2)]

@@ -20,7 +20,7 @@ get_title <- function(html) {
 
 get_company <- function(html) {
   html %>%
-    html_node(xpath = '//*[contains(concat( " ", @class, " " ), concat( " ", "job_company_title", " " ))]') %>%
+    html_node(xpath = '//*[@id="header_info_block"]/div/div[1]/div[1]/a/h1') %>%
     html_text() %>%
     unlist()
 }
@@ -111,7 +111,7 @@ data <- data.frame(title = character(), company = character(), employment_type =
 
 get_info <- function(links) {
   for (link in links) {
-    print(link)
+    # print(link)
     
     link = tryCatch({
       link2 = read_html(link)

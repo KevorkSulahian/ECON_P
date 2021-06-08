@@ -12,7 +12,7 @@ library(devtools)
 library(RColorBrewer)
 
 data <- readxl::read_xls("pr_ductivity countries 2018.xls", sheet = 2)
-  data1 <- readxl::read_xls("pr_ductivity countries 2018.xls", sheet = 3)
+data1 <- readxl::read_xls("pr_ductivity countries 2018.xls", sheet = 3)
 data2 <- readxl::read_xls("eeu_eu .xls")
 colnames(data2) <- c("Country", "Union")
 # only the col's we need
@@ -21,6 +21,7 @@ data<- data[c(1,2,7)]
 data <- data[complete.cases(data),]
 # make it look beautiful
 options(scipen = 999)
+
 # Too big
 data <- data[data$Productivity <  90,]
 colnames(data) <- c("Country","GDP", "Productivity")
@@ -30,6 +31,7 @@ df <- merge(data, data1, by.x = "Country", by.y = 'Country...1')
 # divide by million (easier to see)
 df <- merge(data, data1,  by.x = "Country", by.y = 'Country...1')
 df$`GDP ppp` <- df$`GDP ppp`/1000000
+
 df <- df[c(1,4,5,6)]
 colnames(df) <- c("Country","Abb", "Productivity", "GDP")
 # Armenia different point (different color)

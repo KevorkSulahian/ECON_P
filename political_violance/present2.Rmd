@@ -1,0 +1,199 @@
+---
+title: "Political Violence"
+author: "Kevork Sulahian"
+date: "3/23/2021"
+output: 
+  powerpoint_presentation:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.width=8,fig.height=4.5,dpi=300,out.width="1920px",out.height="1080px")
+```
+
+## R Markdown
+
+ACLED collects real-time data on the locations, dates, actors, fatalities, and types of all reported political violence and protest events
+<https://acleddata.com/>.
+
+
+## A preview of the dataset
+
+```{r}
+library(readr)
+library(tidyverse)
+library(stringr)
+library("sf")
+library("ggplot2")
+theme_set(theme_bw())
+library("rnaturalearth")
+library("rnaturalearthdata")
+library(data.table)
+library(kableExtra)
+library(tm)
+library(RColorBrewer)
+library(wordcloud)
+data <- read_csv("2018-03-06-2021-03-12-Caucasus_and_Central_Asia-Armenia.csv")
+data <- data[data$year == 2021,]
+dt <- data[c(1:5),c(5,8,10,19,26)]
+
+library(magrittr)
+library(flextable)
+data[1:5,c(5,8,10,19,26)] %>% 
+  tibble::rownames_to_column() %>% 
+  flextable() %>%
+  set_header_labels(rowname = "") %>% 
+  # add_header_row(values = c("", "Group 1", "Group 2"), 
+  #                colwidths = c(1, 2, 2)) %>% 
+  theme_zebra() %>% autofit()
+
+data1 <- read_csv2("2018-02-13-2021-02-18-Caucasus_and_Central_Asia-Armenia.csv")
+data1 <- data1 %>%
+  distinct(data_id, .keep_all = T)
+```
+
+
+## Unique event types that are found in the dataset
+
+1. Protests
+2. Riots
+3. Explosions/Remote violence
+4. Strategic developments
+5. Violence against civilians
+6. Battles
+```{r }
+data <- data %>%
+  distinct(data_id, .keep_all = T)
+```
+
+## Events over the region in 2021
+
+```{r}
+
+sites <- st_as_sf(data.frame(longitude = data$longitude,
+                             latitude = data$latitude),
+                  coords = c("longitude", "latitude"),
+                  crs = 4326, agr = "constant")
+cord_dens <- setDT(data)[, .N, longitude]
+
+data2 <- merge(x = data,y = cord_dens,by= "longitude")
+
+min_max_norm <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
+}
+
+data2$N <- min_max_norm(data2$N)+ 3
+
+world <- ne_countries(scale='medium',returnclass = 'sf')
+
+
+countries <- subset(world, admin %in% c("Armenia"))
+(Armenia <- ggplot(data = countries) +
+    geom_sf(fill = "antiquewhite1") +
+    geom_sf(data = sites, size = data2$N, shape = 16, aes(color=data$event_type)) +
+    xlab("Longitude")+ ylab("Latitude") + labs(color = "Event Types")) +
+    ggtitle("Events over the region in 2021")
+```
+
+## Occurance rate of each event over the first 3 months of 2021
+
+```{r}
+data$event_date <- as.Date(data$event_date, format = '%d %B %Y')
+
+data3 <- data
+data3$month <- month(data$event_date)
+data3$year <- year(data$event_date)
+
+# library(plotly)
+
+data3$year <- as.factor(data3$year)
+p <- ggplot(data3, aes(x = month)) +
+  geom_bar(aes(y = ..count.., fill = event_type)) +
+  scale_fill_brewer(palette = "Set3") +
+  ylab("n") +
+  ggtitle("Occurance rate of each event over the first 3 months of 2021")
+
+p
+
+```
+
+
+## Number of the events over years and months
+
+```{r}
+data1$event_date <- as.Date(data1$event_date, format = '%d %B %Y')
+
+data3 <- data1
+data3$month <- month(data1$event_date)
+data3$year <- year(data1$event_date)
+
+# library(plotly)
+
+data3$year <- as.factor(data3$year)
+p <- ggplot(data3, aes(x = month)) +
+  geom_bar(aes(y = ..count.., fill = year)) +
+  scale_fill_brewer(palette = "Set3") +
+  ylab("n") +
+  ggtitle('Number of the events over years and months')
+
+p
+
+```
+
+
+
+## Sources of the events from the year 2018-2021
+
+```{r}
+
+unique_sources <- unique(str_subset(data1$source,"^[^;]+$",negate = FALSE))
+# make a df with unique source and count
+
+# sum(str_detect(data2$source,unique_sources[3]))
+
+sources_count <- data.frame(
+  source = unique_sources,
+  n = 0
+)
+
+for (i in 1:length(unique_sources)) {
+  sources_count$n[i] = sum(str_detect(data1$source,unique_sources[i]))
+}
+
+sources_count <- sources_count[order(sources_count$n,decreasing = T),]
+
+top_10_sources <- sources_count[c(1:10),]
+ggplot(top_10_sources, aes(x = source, y = n, fill = source)) +
+  geom_bar(stat = 'identity') + 
+  theme(axis.text.x = element_blank()) +
+  labs(title = "Sources of the events from the year 2018-2021")
+
+```
+
+## Sources from which the data is collected from in 2021
+
+``` {r}
+unique_sources <- unique(str_subset(data$source,"^[^;]+$",negate = FALSE))
+# make a df with unique source and count
+
+# sum(str_detect(data$source,unique_sources[3]))
+
+sources_count <- data.frame(
+  source = unique_sources,
+  n = 0
+)
+
+for (i in 1:length(unique_sources)) {
+  sources_count$n[i] = sum(str_detect(data$source,unique_sources[i]))
+}
+
+sources_count <- sources_count[order(sources_count$n,decreasing = T),]
+
+top_10_sources <- sources_count[c(1:10),]
+
+ggplot(top_10_sources, aes(x = source, y = n, fill = source)) +
+  geom_bar(stat = 'identity') +
+  theme(axis.text.x = element_blank()) +
+  labs(title = "Sources from which the data is collected from in 2021")
+
+```

@@ -1,0 +1,110 @@
+---
+title: "Time Series Forcasting report"
+author: "Kevork Sulahian"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+library(readxl)
+library(forecast)
+
+df <- read_xls('economy.xls', sheet='2011-2019 NACE 2')
+
+
+df = df[4,]
+df = df[-c(1,3)]
+# rownames(df) = df[1]
+df = df[-1]
+df = t(df)
+df[110] = "155770.7"
+df[] <- sapply(df[],function(x) as.numeric(as.character(x)))
+df = as.numeric(df)
+# df= df * 1000000
+df = df[-c(109:120)]
+ts = ts(df, start = c(2011,1), frequency = c(12))
+ts.plot(ts)
+
+```
+
+
+## Decomposing Time Series
+
+Decomposing a time series means separating it into its constituent components, which are usually a trend component and an irregular component, and if it is a seasonal time series, a seasonal component.
+
+### Decomposing Seasonal Data
+A seasonal time series consists of a trend component, a seasonal component and an irregular component. Decomposing the time series means separating the time series into these three components: that is, estimating these three components.
+
+
+```{r}
+ts_components <- decompose(ts)
+plot(ts_components)
+
+```
+
+```{r}
+fit <- auto.arima(ts,max.p = 5,max.q = 5,max.P = 5,max.Q = 5,max.d = 3,seasonal = TRUE)
+
+fit_forecast = forecast(fit,h=24)
+plot(fit_forecast)
+```
+
+
+# Forecasting
+These estimations are what could happened in 2020 and 2021 if Covid and the war had not impacted our economy
+
+## Forecasting for GDP
+
+### if Covid did not occur
+
+GDP growth was estimated at 7.5% for 2020 
+
+### if Covid and the war did not occur
+
+GDP growth was estimated at 7.5% for 2021
+
+## Forecasting for Total Industry
+
+### if Covid did not occur
+
+Total Industry growth was estimated at 7.4% for 2020 
+
+### if Covid and the war did not occur
+
+Total Industry growth was estimated at 6.0% for 2021
+
+## Forecasting for Manufactring
+
+### if Covid did not occur
+
+Manufactring growth was estimated at 7.8% for 2020 
+
+### if Covid and the war did not occur
+
+Manufactring growth was estimated at 7.3% for 2021
+
+## Forecasting for Service
+
+### if Covid did not occur
+
+Manufactring growth was estimated at 12.7% for 2020 
+
+### if Covid and the war did not occur
+
+Manufactring growth was estimated at 12.5% for 2021
+
+## Forecasting for trade
+
+### if Covid did not occur
+
+Manufactring growth was estimated at 7.89% for 2020 
+
+### if Covid and the war did not occur
+
+Manufactring growth was estimated at 7.48% for 2021

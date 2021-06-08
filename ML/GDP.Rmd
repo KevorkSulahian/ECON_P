@@ -42,21 +42,17 @@ growth <- function(present, past) {
 ```{r}
 # library(readxl)
 
-df <- read_xlsx("GDP growth.xlsx")
-df = df[,-c(1:7)]; df = df[,c(1:4)]
-df = df[-1,]
-df_ts = c()
-for (i in 19:1) {
-  df_ts = c(df_ts,df[i,])
-}
-df_ts = as.numeric(df_ts)
-df_ts = df_ts[-76]
-ts = ts(df_ts,start=c(2001,1), frequency = c(4))
+df <- read_xls("GDP2001-2020.xls",sheet = 'Sheet1')
+df = df[3,]
+df = df[-1]
+df = as.numeric(df)
+df =  df[-c(77:80)]
+# df
+ts = ts(df,start=c(2001,1), frequency = c(4))
 ```
 
 ```{r echo=FALSE}
 ts.plot(ts)
-
 ```
 
 In this case, it appears that an additive model is not appropriate for describing this time series, since the size of the seasonal fluctuations and random fluctuations seem to increase with the level of the time series. Thus, we may need to transform the time series in order to get a transformed time series that can be described using an additive model. For example, we can transform the time series by calculating the natural log of the original data:
@@ -122,15 +118,27 @@ plot(ts_forcaste)
 
 
 ```{r}
-ts_forcaste2 = forecast:::forecast.HoltWinters(ts_forcaste, h= 1)
+ts_forcaste2 = forecast:::forecast.HoltWinters(ts_forcaste, h= 8)
 HW_pred = (as.data.frame(ts_forcaste2))[1]
-HW_pred=HW_pred[1,]
+HW_pred[1]
 ```
 
 
 ```{r echo = FALSE}
 forecast:::plot.forecast(ts_forcaste2)
 ```
+
+```{r}
+year_2019 <- window(ts, 2019,c(2019,4))
+
+year_2020 = HW_pred[,1][c(1:4)]
+year_2021 = HW_pred[,1][c(5:8)]
+growth_HW_20 <- growth(sum(year_2020),sum(c(year_2019)))
+# growth_HW_20
+growth_HW_21 <- growth(sum(year_2021),sum(c(year_2020)))
+# growth_HW_21
+```
+
 
 
 We can investigate whether the predictive model can be improved upon by checking whether the in-sample forecast errors show non-zero autocorrelations at lags 1-20, by making a correlogram and carrying out the Ljung-Box test:
@@ -193,10 +201,10 @@ ts_arima
 
 
 ```{r}
-ts_arima_forecast = forecast(ts_arima,h = 1)
+ts_arima_forecast = forecast(ts_arima,h = 8)
 
 arima_pred = ts_arima_forecast[4]
-arima_pred = arima_pred$mean[1]
+# arima_pred = arima_pred$mean[1]
 forecast:::plot.forecast(ts_arima_forecast)
 ```
 
@@ -223,8 +231,9 @@ plotForecastErrors(ts_arima_forecast$residuals)
 fit3 <- auto.arima(ts, seasonal = T)
 fit3
 
-fit_forecast = forecast(fit3,h=1)
-auto.arima_pred = (as.data.frame(fit_forecast))[1][c(1),]
+fit_forecast = forecast(fit3,h=8)
+
+auto.arima_pred = (as.data.frame(fit_forecast))[1]
 plot(fit_forecast)
 # str(fit)
 ```
@@ -240,10 +249,10 @@ auto.arima_pred
 
 
 ```{r include=FALSE}
-df = rbind(HW_pred, arima_pred, auto.arima_pred)
-df = as.data.frame(t(df))
-rownames(df) = "quarter-4-19"
-writexl::write_xlsx(df,"GDP-19.xlsx")
+# df = rbind(HW_pred, arima_pred, auto.arima_pred)
+# df = as.data.frame(t(df))
+# rownames(df) = "quarter-4-19"
+# writexl::write_xlsx(df,"GDP-19.xlsx")
 ```
 
 

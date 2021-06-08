@@ -5,6 +5,9 @@ account: kevorkysulahian
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1665046
-bundleId: 2791875
+bundleId: 4144703
 url: https://kevorkysulahian.shinyapps.io/surface/
-when: 1581425678.72559
+when: 1611665421.60287
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: export_import.xlsx|quarter.xlsx|quarter_abs.xlsx|quarter_growth.xlsx|yearly.xlsx|yearly_abs.xlsx|yearly_growth.xlsx

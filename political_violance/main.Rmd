@@ -1,0 +1,258 @@
+---
+title: "rmd"
+author: "Kevork Sulahian"
+date: "3/5/2021"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+---
+```{r, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo=FALSE) 
+```
+
+```{r, echo=FALSE, warning=FALSE}
+library(readr)
+library(tidyverse)
+library(stringr)
+library("sf")
+library("ggplot2")
+theme_set(theme_bw())
+library("rnaturalearth")
+library("rnaturalearthdata")
+library(data.table)
+library(kableExtra)
+library(tm)
+library(RColorBrewer)
+library(wordcloud)
+data1 <- read_csv2("2018-02-13-2021-02-18-Caucasus_and_Central_Asia-Armenia.csv")
+dt <- data1[c(1:5),c(5,8,10,19,23)]
+
+dt %>%
+  kbl() %>%
+  kable_material(c("striped", "hover"))
+
+
+```
+<br>
+Names of the available columns in the dataset
+<br>
+```{r}
+colnames(data1)
+
+# length(unique(data2$data_id))
+
+# more than half of the data2 is the same?
+data1 <- data1 %>%
+  distinct(data_id, .keep_all = T)
+```
+<br>
+Number of unique events that are specified in the data2 set
+<br>
+```{r}
+unique(data1$event_type)
+
+# unique(data2$sub_event_type)
+```
+<br>
+The main actors of said events
+<br>
+
+```{r}
+unique(data1$actor1)
+
+# unique(data2$assoc_actor_1)
+
+# unique(data2$source_scale)
+
+fix_cord <- function(test) {
+  test <- as.character(test)
+  test <- strsplit(test,"")
+  
+  for(i in 1:length(test)) {
+    temp = unlist(test[i])
+    temp1 = paste0(temp[1],temp[2],".")
+    temp2 <-paste(temp[3:length(temp)], collapse = "")
+    temp3 <- as.numeric(paste0(temp1,temp2))
+    test[i] = temp3
+  }
+  
+  test <- unlist(test)
+  return(test)
+}
+
+data1$latitude <- fix_cord(data1$latitude)
+
+data1$longitude <- fix_cord(data1$longitude)
+
+
+# first jab at map
+
+sites <- st_as_sf(data.frame(longitude = data1$longitude,
+                             latitude = data1$latitude),
+                  coords = c("longitude", "latitude"),
+                  crs = 4326, agr = "constant")
+cord_dens <- setDT(data1)[, .N, longitude]
+
+data2 <- merge(x = data1,y = cord_dens,by= "longitude")
+
+min_max_norm <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
+}
+
+data2$N <- min_max_norm(data2$N) * 8
+
+world <- ne_countries(scale='medium',returnclass = 'sf')
+
+
+countries <- subset(world, admin %in% c("Armenia"))
+```
+<br>
+The plot below shows the types of the evnets and where they occur.
+Note that many of the locations are approximated to the nearest city or village
+<br>
+
+```{r}
+(Armenia <- ggplot(data = countries) +
+    geom_sf(fill = "antiquewhite1") +
+    geom_sf(data = sites, size = data2$N, shape = 16, aes(color=data2$event_type)) +
+    xlab("Longitude")+ ylab("Latitude") + labs(color = "Event Types"))
+
+```
+<br>
+Number of the events that have occured 
+<br>
+
+```{r, echo=FALSE}
+
+by_events <- data2 %>%
+  group_by(event_type) %>%
+  count(event_type) %>%
+  arrange(desc(n))
+
+ggplot(by_events, aes(x = event_type, y = n, fill = event_type)) +
+  geom_bar(stat = 'identity') + 
+  theme(axis.text.x = element_blank()) +
+  labs(title = "Number of events in the region")
+
+
+```
+<br>
+<br>
+
+```{r, echo = FALSE}
+unique_sources <- unique(str_subset(data2$source,"^[^;]+$",negate = FALSE))
+# make a df with unique source and count
+
+# sum(str_detect(data2$source,unique_sources[3]))
+
+sources_count <- data.frame(
+  source = unique_sources,
+  n = 0
+)
+
+for (i in 1:length(unique_sources)) {
+  sources_count$n[i] = sum(str_detect(data2$source,unique_sources[i]))
+}
+
+sources_count <- sources_count[order(sources_count$n,decreasing = T),]
+
+top_10_sources <- sources_count[c(1:10),]
+```
+<br>
+
+```{r}
+ggplot(top_10_sources, aes(x = source, y = n, fill = source)) +
+  geom_bar(stat = 'identity') + 
+  theme(axis.text.x = element_blank()) +
+  labs(title = "sources")
+
+
+```
+
+
+```{r, echo = FALSE}
+
+# without ministry
+top_10_sources2 <- sources_count[c(2:11),]
+
+ggplot(top_10_sources2, aes(x = source, y = n, fill = source)) +
+  geom_bar(stat = 'identity') + 
+  theme(axis.text.x = element_blank()) +
+  labs(title = "sources without the goverment")
+```
+
+```{r, echo = FALSE}
+data1$event_date <- as.Date(data1$event_date, format = '%d %B %Y')
+
+data3 <- data1
+data3$month <- month(data1$event_date)
+data3$year <- year(data1$event_date)
+
+# library(plotly)
+
+data3$year <- as.factor(data3$year)
+p <- ggplot(data3, aes(x = month)) +
+  geom_bar(aes(y = ..count.., fill = year)) +
+  scale_fill_brewer(palette = "Set3") +
+  ylab("n") +
+  ggtitle("data2 over year and month")
+
+p
+# fig <- ggplotly(p)
+# 
+# fig
+
+```
+<br>
+```{r}
+text <- data2$notes
+vs <- VectorSource(text)
+corpus <- VCorpus(vs)
+corpus <- tm_map(corpus, removePunctuation)
+dtm <- TermDocumentMatrix(corpus,
+                          control = list(removeNumbers = T, removePunctuation = T,
+                                         stopwords= T, stemming = T))
+inspect(dtm)
+dtm_mat <- as.matrix(dtm)
+freqs <- rowSums(dtm_mat)
+df_freqs <- data2.frame(terms = rownames(dtm_mat),
+                       freq = freqs, stringsAsFactors = F)
+df_freqs <- df_freqs[order(df_freqs$freq, decreasing = T),]
+head(df_freqs)
+
+library(RColorBrewer)
+df_freqs_10 <- df_freqs[1:10,]
+ggplot(df_freqs_10, aes(x = reorder(terms, freq), y = freq)) +
+  geom_bar(stat="identity", fill = brewer.pal(n = 10, name="Spectral")) +
+  coord_flip() + labs(x = "Terms", y = "Frequency", title = "top 10 words")
+
+set.seed(1)
+library(wordcloud)
+
+wordcloud(words = df_freqs$terms, freq = df_freqs$freq, min.freq = 10,
+          max.words = 200, random.order = F,
+          colors = brewer.pal(12, 'Dark2'))
+
+
+tdm <- TermDocumentMatrix(corpus,
+                          control = list(removeNumbers = T, removePunctuation = T,
+                                         stopwords= T, stemming = T, 
+                                         weighting = weightTfIdf))
+tdm_mat <- as.matrix(tdm)
+freqs <- rowSums(tdm_mat)
+df_freqs <- data2.frame(terms = rownames(tdm_mat),
+                       freq = freqs, stringsAsFactors = F)
+df_freqs <- df_freqs[order(df_freqs$freq, decreasing = T),]
+
+set.seed(1)
+```
+<br>
+```{r}
+wordcloud(words = df_freqs$terms, freq = df_freqs$freq, min.freq = 1,
+          max.words = 200, random.order = F,
+          colors = brewer.pal(8, 'Dark2'))
+
+
+```

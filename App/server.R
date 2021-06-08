@@ -20,14 +20,15 @@ library(dplyr)
 
 get_GDP_quarter <- function() {
   
-  df_growth <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTHV3LyouKv1E3XAgpnWDBY3aTUsz55MeYY6LJNp_AH3_Lz_ikjNX91A6W0Hq35IA/pub?gid=1836951832&single=true&output=csv",
+  df_growth <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRoA-mM_KX2JhPOSgeNW-AvPQFcVT85OylKcy_VhFy83nRQDtOwktfNhHmVZg0p1A/pub?gid=987392233&single=true&output=csv",
                         stringsAsFactors = F)
   df_growth[c(3:8)] <- sapply(df_growth[c(3:8)],as.character)
   df_growth[c(3:8)] <- sapply(df_growth[c(3:8)],function(x) gsub( ",", "",as.character(x)))
   df_growth[c(3:8)] <- sapply(df_growth[c(3:8)],as.numeric)
   df_growth[c(3:8)] <- round(x = df_growth[c(3:8)],digits = 1)
   df_growth$type = "Growth (%)"
-  df_absolute <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTHV3LyouKv1E3XAgpnWDBY3aTUsz55MeYY6LJNp_AH3_Lz_ikjNX91A6W0Hq35IA/pub?gid=2008348090&single=true&output=csv",
+  
+  df_absolute <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTdZ36oH-RKEUnKWwnrtMRH5kKn-lPbrz1wT5Gr2tJ7IEwy-tjFO45ME4KNad_w5A/pub?gid=1302436418&single=true&output=csv",
                           stringsAsFactors = F)
   df_absolute[c(3:8)] <- sapply(df_absolute[c(3:8)],as.character)
   df_absolute[c(3:8)] <- sapply(df_absolute[c(3:8)],function(x) gsub( ",", "",as.character(x)))
@@ -39,7 +40,7 @@ get_GDP_quarter <- function() {
 }
 
 get_GDP_yearly <- function() {
-  df_growth <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSJxtlLM8CzXGQ9Eg0KBkOcOT-dO-ChUtQl9y-qvAtysQjwUAeuI7VwIKKlu6wz5Q/pub?gid=921778851&single=true&output=csv",
+  df_growth <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQbX32jBWXKU_3ZpxXQZc0-0FYwcoARHMGxLUaR_xL2ERsDRNiY9Wg-fBpYrXGK3Q/pub?gid=1671734611&single=true&output=csv",
                         stringsAsFactors = F)
   df_growth[c(2:7)] <- sapply(df_growth[c(2:7)],as.character)
   df_growth[c(2:7)] <- sapply(df_growth[c(2:7)],function(x) gsub( ",", "",as.character(x)))
@@ -47,7 +48,7 @@ get_GDP_yearly <- function() {
   df_growth[c(2:7)] <- df_growth[c(2:7)] - 100
   df_growth[c(2:7)] <- round(x = df_growth[c(2:7)],digits = 1)
   df_growth$type = "Growth (%)"
-  df_absolute <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSJxtlLM8CzXGQ9Eg0KBkOcOT-dO-ChUtQl9y-qvAtysQjwUAeuI7VwIKKlu6wz5Q/pub?gid=170066381&single=true&output=csv",
+  df_absolute <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vStzCMVLxGiTTMAmBRb3tfb7dNPKKNNy5Y7JGhMklnjCLIKahNmQTy0cy2K2fucLw/pub?gid=1271058968&single=true&output=csv",
                           stringsAsFactors = F)
   df_absolute[c(2:7)] <- sapply(df_absolute[c(2:7)],as.character)
   df_absolute[c(2:7)] <- sapply(df_absolute[c(2:7)],function(x) gsub( ",", "",as.character(x)))
@@ -59,7 +60,7 @@ get_GDP_yearly <- function() {
 }
 
 get_export_import <- function() {
-  df <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRnjDARR4PTnuOVB-4Wll3UgCEjghmOGBY2M1bxJQixX7PFgEO9GcoUmyN9g1-ziQR9-YB7B_Gp1z54/pub?gid=1397351662&single=true&output=csv",
+  df <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vRlQrZDZexRAnIiaPiyD2dJWg7V01vN_2c9I7TKHcovxXf1NQ5WOMERF4Hl5e6Hyw/pub?gid=264480842&single=true&output=csv",
                  stringsAsFactors = F)
   colnames(df) <- c("Commodity", "Codes", "Year", "Month","Export in Tons","Export in 1000 $",
                     "Import in Tons", "Import in 1000 $")
